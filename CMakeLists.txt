@@ -12,8 +12,9 @@ project(
 set(BLT_CXX_STD "c++23" CACHE STRING "")
 
 include(cmake/CaerorPathVariables.cmake)
-include(cmake/CaerorInputVariables.cmake)
+include(cmake/CaerorVariables.cmake)
 include(cmake/CaerorSetupBLT.cmake)
+include(cmake/CaerorSetupRAJA.cmake)
 
 add_subdirectory("${CAEROR_SRC_DIR}")
 

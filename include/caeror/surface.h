@@ -1,4 +1,7 @@
 #pragma once
+
+#include <cmath>
+
 #include <camp/tuple.hpp>
 #include <RAJA/RAJA.hpp>
 
@@ -192,13 +195,102 @@ IntersectionResult AxisAlignedPlane::Intersection(const Point& p, const Directio
 // Axis Aligned Cylinder
 // ============================================================================
 /// @brief Axis aligned cylinder surface
-using AxisAlignedCylinder = Surface<SurfaceType::AxisAlignedCylinder, Axis, double, double>;
+using AxisAlignedCylinder = Surface<SurfaceType::AxisAlignedCylinder, Axis, double, double, double>;
 /// @brief Helper enum for accessing axis aligned cylinder data, centers are stored (x, y), (x, z), or (y, z)
 enum class AxisAlignedCylinderData {
   Axis,
+  Radius,
   Center1,
   Center2
 };
+
+template <>
+RAJA_HOST_DEVICE
+SenseResult AxisAlignedCylinder::Sense(const Point& p) const {
+  const auto axis = GetValue<AxisAlignedCylinderData::Axis>();
+  const auto radius = GetValue<AxisAlignedCylinderData::Radius>();
+  const auto center1 = GetValue<AxisAlignedCylinderData::Center1>();
+  const auto center2 = GetValue<AxisAlignedCylinderData::Center2>();
+
+  double diff1{0.0}, diff2{0.0};
+
+  switch (axis) {
+    case Axis::X:
+      diff1 = center1 - p.y;
+      diff2 = center2 - p.z;
+      break;
+    case Axis::Y:
+      diff1 = center1 - p.x;
+      diff2 = center2 - p.z;
+      break;
+    case Axis::Z:
+      diff1 = center1 - p.x;
+      diff2 = center2 - p.z;
+      break;
+  }
+
+  double value = diff1 * diff1 + diff2 * diff2 - radius * radius;
+
+  if (value < 0.0) 
+    return SenseResult::Negative;
+  if (value > 0.0)
+    return SenseResult::Positive;
+  return SenseResult::On;
+}
+
+template <>
+RAJA_HOST_DEVICE
+IntersectionResult AxisAlignedCylinder::Intersection(const Point& p, const Direction& d) const {
+  const auto axis = GetValue<AxisAlignedCylinderData::Axis>();
+  const auto radius = GetValue<AxisAlignedCylinderData::Radius>();
+  const auto center1 = GetValue<AxisAlignedCylinderData::Center1>();
+  const auto center2 = GetValue<AxisAlignedCylinderData::Center2>();
+
+  double diff1{0.0}, diff2{0.0};
+  double dir1{0.0}, dir2{0.0};
+
+  switch (axis) {
+    case Axis::X:
+      diff1 = p.y - center1;
+      diff2 = p.z - center2;
+      dir1 = d.y;
+      dir2 = d.z;
+      break;
+    case Axis::Y:
+      diff1 = p.x - center1;
+      diff2 = p.z - center2;
+      dir1 = d.x;
+      dir2 = d.z;
+      break;
+    case Axis::Z:
+      diff1 = p.x - center1;
+      diff2 = p.y - center2;
+      dir1 = d.x;
+      dir2 = d.y;
+      break;
+  }
+
+  const double a = dir1 * dir1 + dir2 *dir2;
+  if (a == 0.0)
+    return {0.0, false};
+  const double b = 2.0 * (diff1 * dir1 + diff2 * dir2);
+  const double c = diff1 * diff1 + diff2 * diff2 - radius * radius;
+  const double disc = b * b - 4.0 * a * c;
+
+  if (disc < 0.0)
+    return {0.0, false};
+
+  const double root1 = (-b - sqrt(disc)) / (2.0 * a);
+  if (root1 >= 0.0)
+    return {root1, true};
+  
+  const double root2 = (-b + sqrt(disc)) / (2.0 * a);
+  if (root2 >= 0.0)
+    return {root2, true};
+
+  return {0.0, false};
+
+}
 
 // ============================================================================
 // Sphere

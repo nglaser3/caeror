@@ -304,3 +304,52 @@ enum class SphereData {
   YCenter,
   ZCenter
 };
+
+template <>
+RAJA_HOST_DEVICE
+SenseResult Sphere::Sense(const Point& p) const {
+  const double radius = GetValue<SphereData::Radius>();
+  const double xc = GetValue<SphereData::XCenter>();
+  const double yc = GetValue<SphereData::YCenter>();
+  const double zc = GetValue<SphereData::ZCenter>();
+
+  double x = xc - p.x;
+  double y = yc - p.y;
+  double z = zc - p.z;
+
+  const double value = x * x + y * y + z * z - radius * radius;
+
+  if (value < 0.0)
+    return SenseResult::Negative;
+  if (value > 0.0)
+    return SenseResult::Positive;
+  return SenseResult::On;
+}
+
+template <>
+RAJA_HOST_DEVICE
+IntersectionResult Sphere::Intersection(const Point& p, const Direction& d) const {
+  const double radius = GetValue<SphereData::Radius>();
+  const double xc = GetValue<SphereData::XCenter>();
+  const double yc = GetValue<SphereData::YCenter>();
+  const double zc = GetValue<SphereData::ZCenter>();
+
+  double x = p.x - xc;
+  double y = p.y - yc;
+  double z = p.z - zc;
+
+  const double b = x * d.x + y * d.y + z * d.z;
+  const double c = x * x + y * y + z * z - radius * radius;
+
+  double disc = b * b - c;
+  if (disc < 0.0) 
+    return {0.0, false};
+  
+  const double root1 = -b - sqrt(disc);
+  if (root1 >= 0.0)
+    return {root1, true};
+  const double root2 = -b + sqrt(disc);
+  if (root2 >= 0.0)
+    return {root2, true};
+  return {0.0, false};
+}

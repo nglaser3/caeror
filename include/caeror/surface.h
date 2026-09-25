@@ -7,6 +7,8 @@
 
 #include "caeror/data.h"
 
+namespace caeror
+{
 /**
  * @brief Enum for sense of a surface
  */
@@ -289,7 +291,6 @@ IntersectionResult AxisAlignedCylinder::Intersection(const Point& p, const Direc
     return {root2, true};
 
   return {0.0, false};
-
 }
 
 // ============================================================================
@@ -353,3 +354,4 @@ IntersectionResult Sphere::Intersection(const Point& p, const Direction& d) cons
     return {root2, true};
   return {0.0, false};
 }
+} // namespace caeror

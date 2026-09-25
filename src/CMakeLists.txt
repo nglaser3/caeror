@@ -9,6 +9,7 @@ blt_add_library(
         surface.cc
     HEADERS
         ${CAEROR_INCLUDE_DIR}/caeror/surface.h
+        ${CAEROR_INCLUDE_DIR}/caeror/data.h
     DEPENDS_ON
         RAJA
 )

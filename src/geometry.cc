@@ -1,8 +1,8 @@
-#include "caeror/geometry.h"
+#include "caeror/geometry_constructor.h"
 
 namespace caeror
 {
-  Universe Geometry::CreateUniverse(std::vector<Cell> cells) {
+  Universe GeometryConstructor::CreateUniverse(std::vector<Cell> cells) {
     auto id = universes_.size();
     std::vector<CellID> cell_ids;
     for (const auto& cell : cells) cell_ids.push_back(cell.id_);

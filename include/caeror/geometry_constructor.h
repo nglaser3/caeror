@@ -11,7 +11,7 @@
 #include "caeror/volumes.h"
 
 namespace caeror {
-  class Geometry {
+  class GeometryConstructor {
     public:
       template <SurfaceType Type, typename... DataTypes> 
       auto CreateSurface(camp::tuple<DataTypes...>&& data) {
@@ -34,7 +34,7 @@ namespace caeror {
   };
 
   template <>
-  Cell Geometry::CreateCell<MaterialID>(const Region region, const MaterialID fill_id) {
+  Cell GeometryConstructor::CreateCell<MaterialID>(const Region region, const MaterialID fill_id) {
     auto id = cells_.size();
     auto cell_ptr = std::make_unique<Cell>(CellID{id}, region);
     cell_ptr->material_fill_ = fill_id;
@@ -43,7 +43,7 @@ namespace caeror {
   }
 
   template <>
-  Cell Geometry::CreateCell<Universe>(const Region region, const Universe fill) {
+  Cell GeometryConstructor::CreateCell<Universe>(const Region region, const Universe fill) {
     auto id = cells_.size();
     auto cell_ptr = std::make_unique<Cell>(CellID{id}, region);
     cell_ptr->universe_fill_ = fill.id_;

@@ -6,7 +6,8 @@ blt_add_library(
     NAME
         caeror
     SOURCES
-        surface.cc
+        geometry.cc
+
     HEADERS
         ${CAEROR_INCLUDE_DIR}/caeror/surface.h
         ${CAEROR_INCLUDE_DIR}/caeror/data.h

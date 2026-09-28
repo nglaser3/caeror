@@ -6,6 +6,7 @@
 #include <RAJA/RAJA.hpp>
 
 #include "caeror/data.h"
+#include "caeror/raja_layouts.h"
 
 namespace caeror
 {
@@ -45,11 +46,17 @@ enum class SurfaceType {
   Sphere,
 };
 
+struct SurfaceBase{
+  /// @brief Unique ID associated with this surface
+  const SurfaceID id_;
+};
+
 /**
  * @brief Container for surface type and underlying data to represent the surface
  */
 template<SurfaceType Type, typename... DataTypes>
-struct Surface{
+struct Surface : public SurfaceBase{
+
   /// @brief Type of the surface
   static constexpr SurfaceType surface_type_ = Type;
 

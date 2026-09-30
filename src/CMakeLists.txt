@@ -6,11 +6,11 @@ blt_add_library(
     NAME
         caeror
     SOURCES
-        geometry.cc
+        caeror_geometry.cc
+        geometry_constructor.cc
 
     HEADERS
-        ${CAEROR_INCLUDE_DIR}/caeror/surface.h
-        ${CAEROR_INCLUDE_DIR}/caeror/data.h
+        ${CAEROR_INCLUDE_DIR}/caeror/geometry_constructor.h
     DEPENDS_ON
         RAJA
 )

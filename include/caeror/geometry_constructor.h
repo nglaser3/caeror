@@ -26,6 +26,12 @@ namespace caeror {
       Cell CreateCell(const Region region, const FillIDType);
 
       Universe CreateUniverse(std::vector<Cell> cells);
+
+      auto& GetSurfaces() const {return surfaces_;}
+      auto& GetSurfaceTypes() const {return surface_types_;}
+      auto& GetCells() const {return cells_;}
+      auto& GetUniverses() const {return universes_;}
+
     private:
       std::vector<std::unique_ptr<SurfaceBase>> surfaces_;
       std::vector<SurfaceType> surface_types_;

@@ -10,8 +10,8 @@ namespace caeror
   struct Cell {
     const CellID id_;
     Region region_;
-    MaterialID material_fill_;
-    UniverseID universe_fill_;
+    MaterialID material_fill_{MAXCaerorIndex};
+    UniverseID universe_fill_{MAXCaerorIndex};
   };
 
   struct Universe {

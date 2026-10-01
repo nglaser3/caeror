@@ -15,14 +15,23 @@ namespace caeror {
           size_(){}
 
       RAJA_HOST_DEVICE
-      void push(DataType value) {
+      void Push(DataType value) {
         eval_stack_[size_++] = value;
       }
 
       RAJA_HOST_DEVICE
-      DataType pop() {
+      DataType Pop() {
         return eval_stack_[--size_];
       }
+
+      RAJA_HOST_DEVICE
+      void Clear() {
+        size_ = 0;
+      }
+
+      RAJA_HOST_DEVICE
+      bool Empty() const {return size_ == 0;}
+
     private:
       DataType* eval_stack_;
       CaerorIndexType size_;

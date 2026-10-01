@@ -5,6 +5,7 @@ namespace caeror {
   // Index definitions
   // ==========================================================================
   using CaerorIndexType = uint64_t;
+  using CaerorTokenType = int64_t;
   constexpr CaerorIndexType MAXCaerorIndex = std::numeric_limits<CaerorIndexType>::max();
 
   RAJA_INDEX_VALUE_T(SurfaceID, CaerorIndexType, "Surface Index");

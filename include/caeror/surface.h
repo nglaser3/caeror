@@ -46,6 +46,9 @@ enum class SurfaceType {
   Sphere,
 };
 
+template <SurfaceType Type>
+struct SurfaceTraits;
+
 struct SurfaceBase{
   /// @brief Unique ID associated with this surface
   const SurfaceID id_;
@@ -59,6 +62,9 @@ struct Surface : public SurfaceBase{
 
   /// @brief Type of the surface
   static constexpr SurfaceType surface_type_ = Type;
+
+  /// @brief Data requirements
+  static constexpr size_t data_size_ = sizeof...(DataTypes) + 1;
 
   /// @brief Data used to define the surface
   camp::tuple<DataTypes...> data_;
@@ -81,6 +87,12 @@ struct Surface : public SurfaceBase{
 // ============================================================================
 /// @brief Generic plane surface
 using Plane = Surface<SurfaceType::Plane, double, double, double, double>;
+
+template<>
+struct SurfaceTraits<SurfaceType::Plane> {
+  using Type = Plane;
+};
+
 /// @brief Helper enum for accessing generic surface data
 enum class PlaneData {
   A,
@@ -133,6 +145,11 @@ IntersectionResult Plane::Intersection(const Point& p, const Direction& d) const
 // ============================================================================
 /// @brief Axis aligned plane surface
 using AxisAlignedPlane = Surface<SurfaceType::AxisAlignedPlane, Axis, double>;
+
+template<>
+struct SurfaceTraits<SurfaceType::AxisAlignedPlane> {
+  using Type = AxisAlignedPlane;
+};
 /// @brief Helper enum for accessing axis aligned plane data
 enum class AxisAlignedPlaneData {
   Axis,
@@ -205,6 +222,12 @@ IntersectionResult AxisAlignedPlane::Intersection(const Point& p, const Directio
 // ============================================================================
 /// @brief Axis aligned cylinder surface
 using AxisAlignedCylinder = Surface<SurfaceType::AxisAlignedCylinder, Axis, double, double, double>;
+
+template<>
+struct SurfaceTraits<SurfaceType::AxisAlignedCylinder> {
+  using Type = AxisAlignedCylinder;
+};
+
 /// @brief Helper enum for accessing axis aligned cylinder data, centers are stored (x, y), (x, z), or (y, z)
 enum class AxisAlignedCylinderData {
   Axis,
@@ -305,6 +328,12 @@ IntersectionResult AxisAlignedCylinder::Intersection(const Point& p, const Direc
 // ============================================================================
 /// @brief Sphere surface
 using Sphere = Surface<SurfaceType::Sphere, double, double, double, double>;
+
+template<>
+struct SurfaceTraits<SurfaceType::Sphere> {
+  using Type = Sphere;
+};
+
 /// @brief Helper enum for accessing sphere data
 enum class SphereData {
   Radius,
@@ -361,4 +390,22 @@ IntersectionResult Sphere::Intersection(const Point& p, const Direction& d) cons
     return {root2, true};
   return {0.0, false};
 }
+
+// ============================================================================
+// Bookkeeping
+// ============================================================================
+template <SurfaceType Type>
+RAJA_HOST_DEVICE
+const auto& CastSurface(const SurfaceBase& s) {
+  using FullSurfType = typename SurfaceTraits<Type>::Type;
+  return static_cast<const FullSurfType&>(s);
+} 
+
+template <SurfaceType Type>
+RAJA_HOST_DEVICE
+size_t SurfaceDataReq() {
+  using FullSurfType = typename SurfaceTraits<Type>::Type;
+  return FullSurfType::data_size_;
+}
+
 } // namespace caeror

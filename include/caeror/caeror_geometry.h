@@ -3,6 +3,7 @@
 #include <camp/tuple.hpp>
 #include <RAJA/RAJA.hpp>
 
+#include "caeror/caeror_geometry_state.h"
 #include "caeror/geometry_constructor.h"
 #include "caeror/raja_layouts.h"
 
@@ -30,6 +31,7 @@ namespace caeror {
 
       void GenerateSurfacesData(const GeometryConstructor& input){
         const auto& surface_types = input.GetSurfaceTypes();
+        num_surfaces_ = surface_types.size();
         max_surf_data_size_ = 0;
         for (size_t surf_id = 0; surf_id < surface_types.size(); surf_id++) {
           auto stype = surface_types[surf_id];
@@ -99,6 +101,7 @@ namespace caeror {
 
       void GenerateCellsData(const GeometryConstructor& input) {
         const auto& cells = input.GetCells();
+        num_cells_ = cells.size();
         rpn_logic_sizes_ = new size_t[cells.size()];
         cell_mat_fill_ids_ = new CaerorIndexType[cells.size()];
         cell_uni_fill_ids_ = new CaerorIndexType[cells.size()];
@@ -114,20 +117,21 @@ namespace caeror {
           if (logic_size > max_logic_size_) max_logic_size_ = logic_size;
         }
 
-        rpn_logic_data_ = new CaerorTokenType[max_logic_size_ * cells.size()];
+        rpn_logic_data_ = new RPNToken[max_logic_size_ * cells.size()];
         for (const auto& cell : cells) {
           const auto cell_id = *(cell->id_);
           if (cell_mat_fill_ids_[cell_id] == MAXCaerorIndex) continue;
           auto rpn_offset = max_logic_size_ * (*(cell->id_));
           const auto& logic = cell->region_.logic_;
           for (size_t local_index = 0; local_index < logic.size(); local_index++) {
-            rpn_logic_data_[rpn_offset + local_index] = *logic[local_index];
+            rpn_logic_data_[rpn_offset + local_index] = logic[local_index];
           }
         }
       }
 
       void GenerateUniverseData(const GeometryConstructor& input) {
         const auto& universes = input.GetUniverses();
+        num_universes_ = universes.size();
         uni_cell_sizes_ = new size_t[universes.size()];
         max_uni_cells_ = 0;
         for (const auto& universe : universes) {
@@ -148,14 +152,59 @@ namespace caeror {
         }
       }
 
+      template <typename RajaResource>
+      RAJA_HOST_DEVICE
+      CaerorGeometryState<RajaResource> GetState() const {
+        CaerorGeometryState<RajaResource> state{};
+        state.resource = RajaResource{};
+
+        auto surf_size = num_surfaces_ * max_surf_data_size_ * sizeof(double);
+        state.surfaces_data_ = state.resource.allocate(surf_size);
+        state.resource.memcpy(state.surfaces_data_, surfaces_data_, surf_size);
+        state.surfaces = {state.surfaces_data_, num_surfaces_, max_surf_data_size_};
+
+        auto logic_size = num_cells_ * max_logic_size_ * sizeof(RPNToken);
+        state.rpn_logic_data_ = state.resource.allocate(logic_size);
+        state.resource.memcpy(state.rpn_logic_data_, rpn_logic_data_, logic_size);
+        state.logic = {state.rpn_logic_data_, num_cells_, max_logic_size_};
+
+        state.rpn_logic_sizes_ = state.resource.allocate(num_cells_*sizeof(size_t));
+        state.resource.memcpy(state.rpn_logic_sizes_, rpn_logic_sizes_, num_cells_*sizeof(size_t));
+        state.logic_sizes = {state.rpn_logic_sizes_, num_cells_};
+
+        auto cell_size = num_cells_ * sizeof(CaerorIndexType);
+        state.cell_mat_fill_ids_ = state.resource.allocate(cell_size);
+        state.resource.memcpy(state.cell_mat_fill_ids_, cell_mat_fill_ids_, cell_size);
+        state.material_fills = {state.cell_mat_fill_ids_, cell_size};
+
+        state.cell_uni_fill_ids_ = state.resource.allocate(cell_size);
+        state.resource.memcpy(state.cell_uni_fill_ids_, cell_uni_fill_ids_, cell_size);
+        state.universe_fills = {state.cell_uni_fill_ids_, cell_size};
+
+        auto unicell_size = num_universes_ * max_uni_cells_ * sizeof(CaerorIndexType);
+        state.uni_cell_ids_ = state.resource.allocate(unicell_size);
+        state.resource.memcpy(state.uni_cell_ids_, uni_cell_ids_, unicell_size);
+        state.universe_cells = {state.uni_cell_ids_, num_universes_, max_uni_cells_};
+
+        auto uni_size = num_universes_ * sizeof(size_t);
+        state.uni_cell_sizes_ = state.resource.allocate(uni_size);
+        state.resource.memcpy(state.uni_cell_sizes_, uni_cell_sizes_, uni_size);
+        state.universe_sizes = {state.uni_cell_sizes_, num_universes_};
+        return state;
+      } 
+      
     private:
+      /// @brief Number of surfaces
+      size_t num_surfaces_;
       /// @brief 2d array for surface data and type (0th index)
       double* surfaces_data_;
       /// @brief second dimension size for surface data
       size_t max_surf_data_size_; 
 
+      /// @brief Number of cells
+      size_t num_cells_;
       /// @brief 2d array for region logic
-      CaerorTokenType* rpn_logic_data_;
+      RPNToken* rpn_logic_data_;
       /// @brief 1d array for logic size of cells
       size_t* rpn_logic_sizes_;
       /// @brief second dimension size for rpn logic
@@ -165,6 +214,8 @@ namespace caeror {
       ///@brief 1d array mapping cell index to universe id
       CaerorIndexType* cell_uni_fill_ids_;
 
+      /// @brief Number of universes
+      size_t num_universes_;
       /// @brief 2d array for cells in universes
       CaerorIndexType* uni_cell_ids_;
       /// @brief 1d array for length of universe cells

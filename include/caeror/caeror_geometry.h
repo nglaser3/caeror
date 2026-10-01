@@ -18,22 +18,19 @@ namespace caeror {
 
       ~CaerorGeometry() {
         delete[] surfaces_data_;
-        delete[] surface_data_offsets_;
 
         delete[] rpn_logic_data_;
-        delete[] cell_logic_offsets_;
+        delete[] rpn_logic_sizes_;
         delete[] cell_mat_fill_ids_;
         delete[] cell_uni_fill_ids_;
 
         delete[] uni_cell_ids_;
-        delete[] universe_offsets_;
+        delete[] uni_cell_sizes_;
       }
 
       void GenerateSurfacesData(const GeometryConstructor& input){
         const auto& surface_types = input.GetSurfaceTypes();
-        size_t surf_data_size = 0;
-        surface_data_offsets_ = new size_t[surface_types.size() + 1];
-        surface_data_offsets_[0] = 0;
+        max_surf_data_size_ = 0;
         for (size_t surf_id = 0; surf_id < surface_types.size(); surf_id++) {
           auto stype = surface_types[surf_id];
           size_t data_size;
@@ -51,15 +48,14 @@ namespace caeror {
               data_size = SurfaceDataReq<SurfaceType::Sphere>();
               break;
           }
-          surface_data_offsets_[surf_id + 1] = surface_data_offsets_[surf_id] + data_size;
-          surf_data_size += data_size;
+          if (data_size > max_surf_data_size_) max_surf_data_size_ = data_size;
         }
 
-        surfaces_data_ = new double[surf_data_size];
         const auto& surfaces = input.GetSurfaces();
+        surfaces_data_ = new double[max_surf_data_size_ * surfaces.size()];
         for(size_t surf_id = 0; surf_id < surface_types.size(); surf_id++) {
           auto stype = surface_types[surf_id];
-          auto offset = surface_data_offsets_[surf_id];
+          auto offset = max_surf_data_size_ * surf_id;
           surfaces_data_[offset] = static_cast<double>(stype);
 
           const auto& surf = *surfaces[surf_id];
@@ -103,11 +99,10 @@ namespace caeror {
 
       void GenerateCellsData(const GeometryConstructor& input) {
         const auto& cells = input.GetCells();
-        cell_logic_offsets_ = new size_t[cells.size() + 1];
-        cell_logic_offsets_[0] = 0;
+        rpn_logic_sizes_ = new size_t[cells.size()];
         cell_mat_fill_ids_ = new CaerorIndexType[cells.size()];
         cell_uni_fill_ids_ = new CaerorIndexType[cells.size()];
-        size_t rpn_token_size = 0;
+        max_logic_size_ = 0;
         for (const auto& cell : cells) {
           const auto cell_id = *(cell->id_);
           cell_uni_fill_ids_[cell_id] = *(cell->universe_fill_);
@@ -115,15 +110,15 @@ namespace caeror {
           size_t logic_size = 0;
           if (*(cell->material_fill_) != MAXCaerorIndex) 
             logic_size = cell->region_.logic_.size();
-          cell_logic_offsets_[cell_id + 1] = cell_logic_offsets_[cell_id] + logic_size;
-          rpn_token_size += logic_size;
+          rpn_logic_sizes_[cell_id] = logic_size;
+          if (logic_size > max_logic_size_) max_logic_size_ = logic_size;
         }
 
-        rpn_logic_data_ = new CaerorTokenType[rpn_token_size];
+        rpn_logic_data_ = new CaerorTokenType[max_logic_size_ * cells.size()];
         for (const auto& cell : cells) {
           const auto cell_id = *(cell->id_);
           if (cell_mat_fill_ids_[cell_id] == MAXCaerorIndex) continue;
-          auto rpn_offset = cell_logic_offsets_[*(cell->id_)];
+          auto rpn_offset = max_logic_size_ * (*(cell->id_));
           const auto& logic = cell->region_.logic_;
           for (size_t local_index = 0; local_index < logic.size(); local_index++) {
             rpn_logic_data_[rpn_offset + local_index] = *logic[local_index];
@@ -133,20 +128,19 @@ namespace caeror {
 
       void GenerateUniverseData(const GeometryConstructor& input) {
         const auto& universes = input.GetUniverses();
-        universe_offsets_ = new size_t[universes.size() + 1];
-        universe_offsets_[0] = 0;
-        size_t total_num_uni_cells = 0;
+        uni_cell_sizes_ = new size_t[universes.size()];
+        max_uni_cells_ = 0;
         for (const auto& universe : universes) {
           const auto uni_id = *(universe->id_);
           auto num_cells = universe->cells_.size();
-          universe_offsets_[uni_id + 1] = universe_offsets_[uni_id] + num_cells;
-          total_num_uni_cells += num_cells;
+          uni_cell_sizes_[uni_id] = num_cells;
+          if (num_cells > max_uni_cells_) max_uni_cells_ = num_cells;
         }
 
-        uni_cell_ids_ = new CaerorIndexType[total_num_uni_cells];
+        uni_cell_ids_ = new CaerorIndexType[max_uni_cells_ * universes.size()];
         for (const auto& universe : universes) {
           const auto uni_id = *(universe->id_);
-          const auto offset = universe_offsets_[uni_id];
+          const auto offset = max_uni_cells_ * uni_id;
           for (size_t local_index = 0; local_index < universe->cells_.size(); local_index++) {
             const auto cell_id = *(universe->cells_[local_index]);
             uni_cell_ids_[offset + local_index] = cell_id;
@@ -155,23 +149,27 @@ namespace caeror {
       }
 
     private:
-      /// @brief 1d array for surface data and type (0th index)
+      /// @brief 2d array for surface data and type (0th index)
       double* surfaces_data_;
-      /// @brief 1d array for surface data offsets
-      size_t* surface_data_offsets_;
+      /// @brief second dimension size for surface data
+      size_t max_surf_data_size_; 
 
-      /// @brief 1d array for region logic
+      /// @brief 2d array for region logic
       CaerorTokenType* rpn_logic_data_;
-      /// @brief 1d array for cell offsets in rpn logic
-      size_t* cell_logic_offsets_;
+      /// @brief 1d array for logic size of cells
+      size_t* rpn_logic_sizes_;
+      /// @brief second dimension size for rpn logic
+      size_t max_logic_size_;
       /// @brief 1d array mapping cell index to material id
       CaerorIndexType* cell_mat_fill_ids_;
       ///@brief 1d array mapping cell index to universe id
       CaerorIndexType* cell_uni_fill_ids_;
 
-      /// @brief 1d array for cells in universes
+      /// @brief 2d array for cells in universes
       CaerorIndexType* uni_cell_ids_;
-      /// @brief 1d array for universe offsets into cells
-      size_t* universe_offsets_;
+      /// @brief 1d array for length of universe cells
+      size_t* uni_cell_sizes_;
+      /// @brief second dimension size for universe cell ids
+      size_t max_uni_cells_;
   };
 } // namespace caeror

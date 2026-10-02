@@ -2,6 +2,7 @@
 #include <cmath>
 
 #include <RAJA/RAJA.hpp>
+#include "caeror/raja_layouts.h"
 
 namespace caeror
 {
@@ -20,5 +21,13 @@ struct Direction{
     y = sin_theta * sin(phi);
     z = mu;
   }
+};
+
+struct Particle{
+  double x, y, z;
+  double mu, phi;
+  double ux, uy, uz;
+  
+  CellID cell;
 };
 } // namespace caeror

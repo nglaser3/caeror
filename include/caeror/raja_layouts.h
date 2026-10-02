@@ -27,6 +27,7 @@ namespace caeror {
   using CaerorLayout = RAJA::TypedLayout<CaerorIndexType, RAJA::tuple<IndexTypes...>>;
 
   using SurfaceDataLayout = CaerorLayout<SurfaceID, SurfaceDataIndex>;
+  using SurfaceCellLayout = CaerorLayout<SurfaceID, LocalCellID>;
   using CellLayout = CaerorLayout<CellID>;
   using RPNTokenLayout = CaerorLayout<CellID, RPNTokenIndex>;
   using UniverseLayout = CaerorLayout<UniverseID>;

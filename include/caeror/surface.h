@@ -405,6 +405,24 @@ size_t SurfaceDataReq() {
 }
 
 RAJA_HOST_DEVICE
+SenseResult Sense(SurfaceType stype, const Point& p, const double* data) {
+   switch (stype) {
+    case SurfaceType::Plane:
+      return Sense<SurfaceType::Plane>(p, data);
+      break;
+    case SurfaceType::AxisAlignedPlane:
+      return Sense<SurfaceType::AxisAlignedPlane>(p, data);
+      break;
+    case SurfaceType::AxisAlignedCylinder:
+      return Sense<SurfaceType::AxisAlignedCylinder>(p, data);
+      break;
+    case SurfaceType::Sphere:
+      return Sense<SurfaceType::Sphere>(p, data);
+      break;
+  } 
+}
+
+RAJA_HOST_DEVICE
 IntersectionResult Intersection(SurfaceType stype, const Point& p, const Direction& d, const double* data) {
   switch (stype) {
     case SurfaceType::Plane:

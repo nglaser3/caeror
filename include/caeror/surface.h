@@ -30,7 +30,7 @@ struct IntersectionResult{
 /**
  * @brief Enum of allowed axes
  */
-enum Axis {
+enum Axis : int{
   X,
   Y, 
   Z
@@ -100,10 +100,10 @@ enum class PlaneData {
 template<>
 RAJA_HOST_DEVICE
 SenseResult Sense<SurfaceType::Plane>(const Point& p, const double* data) {
-  const double a = data[PlaneData::A];
-  const double b = data[PlaneData::B];
-  const double c = data[PlaneData::C];
-  const double d0 = data[PlaneData::D];
+  const double a = data[static_cast<int>(PlaneData::A)];
+  const double b = data[static_cast<int>(PlaneData::B)];
+  const double c = data[static_cast<int>(PlaneData::C)];
+  const double d0 = data[static_cast<int>(PlaneData::D)];
 
   const double value = a * p.x + b * p.y + c * p.z + d0;
 
@@ -118,10 +118,10 @@ SenseResult Sense<SurfaceType::Plane>(const Point& p, const double* data) {
 template<>
 RAJA_HOST_DEVICE
 IntersectionResult Intersection<SurfaceType::Plane>(const Point& p, const Direction& d, const double* data) {
-  const double a = data[PlaneData::A];
-  const double b = data[PlaneData::B];
-  const double c = data[PlaneData::C];
-  const double d0 = data[PlaneData::D];
+  const double a = data[static_cast<int>(PlaneData::A)];
+  const double b = data[static_cast<int>(PlaneData::B)];
+  const double c = data[static_cast<int>(PlaneData::C)];
+  const double d0 = data[static_cast<int>(PlaneData::D)];
 
   const double denom = a * d.x + b * d.y + c * d.z;
 
@@ -154,9 +154,9 @@ enum class AxisAlignedPlaneData {
 
 template<>
 RAJA_HOST_DEVICE
-SenseResult Sense<SurfaceType::AxisAlignedPlane>(const Point& p, const double* data) const {
-  const Axis axis = static_cast<Axis>(data[AxisAlignedPlaneData::Axis]);
-  const double intercept = data[AxisAlignedPlaneData::Intercept];
+SenseResult Sense<SurfaceType::AxisAlignedPlane>(const Point& p, const double* data) {
+  const Axis axis = static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
+  const double intercept = data[static_cast<int>(AxisAlignedPlaneData::Intercept)];
 
   double value = 0.0;
   
@@ -181,9 +181,9 @@ SenseResult Sense<SurfaceType::AxisAlignedPlane>(const Point& p, const double* d
 
 template<>
 RAJA_HOST_DEVICE
-IntersectionResult Intersection<SurfaceType::AxisAlignedPlane>(const Point& p, const Direction& d, const double* data) const {
-  const Axis axis = static_cast<Axis>(data[AxisAlignedPlaneData::Axis]);
-  const double intercept = data[AxisAlignedPlaneData::Intercept];
+IntersectionResult Intersection<SurfaceType::AxisAlignedPlane>(const Point& p, const Direction& d, const double* data) {
+  const Axis axis = static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
+  const double intercept = data[static_cast<int>(AxisAlignedPlaneData::Intercept)];
 
   double pos{0.0}, dir{0.0};
 
@@ -234,11 +234,11 @@ enum class AxisAlignedCylinderData {
 
 template <>
 RAJA_HOST_DEVICE
-SenseResult Sense<SurfaceType::AxisAlignedCylinder>(const Point& p, const double* data) const {
-  const auto axis = data[AxisAlignedCylinderData::Axis];
-  const auto radius = data[AxisAlignedCylinderData::Radius];
-  const auto center1 = data[AxisAlignedCylinderData::Center1];
-  const auto center2 = data[AxisAlignedCylinderData::Center2];
+SenseResult Sense<SurfaceType::AxisAlignedCylinder>(const Point& p, const double* data) {
+  const auto axis = static_cast<Axis>(data[static_cast<int>(AxisAlignedCylinderData::Axis)]);
+  const auto radius = data[static_cast<int>(AxisAlignedCylinderData::Radius)];
+  const auto center1 = data[static_cast<int>(AxisAlignedCylinderData::Center1)];
+  const auto center2 = data[static_cast<int>(AxisAlignedCylinderData::Center2)];
 
   double diff1{0.0}, diff2{0.0};
 
@@ -268,11 +268,11 @@ SenseResult Sense<SurfaceType::AxisAlignedCylinder>(const Point& p, const double
 
 template <>
 RAJA_HOST_DEVICE
-IntersectionResult Intersection<SurfaceType::AxisAlignedCylinder>(const Point& p, const Direction& d, const double* data) const {
-  const auto axis = data[AxisAlignedCylinderData::Axis];
-  const auto radius = data[AxisAlignedCylinderData::Radius];
-  const auto center1 = data[AxisAlignedCylinderData::Center1];
-  const auto center2 = data[AxisAlignedCylinderData::Center2];
+IntersectionResult Intersection<SurfaceType::AxisAlignedCylinder>(const Point& p, const Direction& d, const double* data) {
+  const auto axis = static_cast<Axis>(data[static_cast<int>(AxisAlignedCylinderData::Axis)]);
+  const auto radius = data[static_cast<int>(AxisAlignedCylinderData::Radius)];
+  const auto center1 = data[static_cast<int>(AxisAlignedCylinderData::Center1)];
+  const auto center2 = data[static_cast<int>(AxisAlignedCylinderData::Center2)];
 
   double diff1{0.0}, diff2{0.0};
   double dir1{0.0}, dir2{0.0};
@@ -340,11 +340,11 @@ enum class SphereData {
 
 template <>
 RAJA_HOST_DEVICE
-SenseResult Sense<SurfaceType::Sphere>(const Point& p, const double* data) const {
-  const double radius = data[SphereData::Radius];
-  const double xc = data[SphereData::XCenter];
-  const double yc = data[SphereData::YCenter];
-  const double zc = data[SphereData::ZCenter];
+SenseResult Sense<SurfaceType::Sphere>(const Point& p, const double* data) {
+  const double radius = data[static_cast<int>(SphereData::Radius)];
+  const double xc = data[static_cast<int>(SphereData::XCenter)];
+  const double yc = data[static_cast<int>(SphereData::YCenter)];
+  const double zc = data[static_cast<int>(SphereData::ZCenter)];
 
   double x = xc - p.x;
   double y = yc - p.y;
@@ -361,11 +361,11 @@ SenseResult Sense<SurfaceType::Sphere>(const Point& p, const double* data) const
 
 template <>
 RAJA_HOST_DEVICE
-IntersectionResult Intersection<SurfaceType::Sphere>(const Point& p, const Direction& d, const double* data) const {
-  const double radius = data[SphereData::Radius];
-  const double xc = data[SphereData::XCenter];
-  const double yc = data[SphereData::YCenter];
-  const double zc = data[SphereData::ZCenter];
+IntersectionResult Intersection<SurfaceType::Sphere>(const Point& p, const Direction& d, const double* data) {
+  const double radius = data[static_cast<int>(SphereData::Radius)];
+  const double xc = data[static_cast<int>(SphereData::XCenter)];
+  const double yc = data[static_cast<int>(SphereData::YCenter)];
+  const double zc = data[static_cast<int>(SphereData::ZCenter)];
 
   double x = p.x - xc;
   double y = p.y - yc;
@@ -402,6 +402,24 @@ RAJA_HOST_DEVICE
 size_t SurfaceDataReq() {
   using FullSurfType = typename SurfaceTraits<Type>::Type;
   return FullSurfType::data_size_;
+}
+
+RAJA_HOST_DEVICE
+IntersectionResult Intersection(SurfaceType stype, const Point& p, const Direction& d, const double* data) {
+  switch (stype) {
+    case SurfaceType::Plane:
+      return Intersection<SurfaceType::Plane>(p, d, data);
+      break;
+    case SurfaceType::AxisAlignedPlane:
+      return Intersection<SurfaceType::AxisAlignedPlane>(p, d, data);
+      break;
+    case SurfaceType::AxisAlignedCylinder:
+      return Intersection<SurfaceType::AxisAlignedCylinder>(p, d, data);
+      break;
+    case SurfaceType::Sphere:
+      return Intersection<SurfaceType::Sphere>(p, d, data);
+      break;
+  }
 }
 
 } // namespace caeror

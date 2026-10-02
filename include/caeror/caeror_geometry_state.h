@@ -1,6 +1,8 @@
 #pragma once
 
+#include "caeror/data.h"
 #include "caeror/raja_layouts.h"
+#include "caeror/surface.h"
 
 namespace caeror {
   template <typename RajaResource>
@@ -35,5 +37,9 @@ namespace caeror {
       CaerorIndexType* uni_cell_ids_;
       size_t* uni_cell_sizes_;
   };
+
+  template <typename RajaResource>
+  RAJA_HOST_DEVICE
+  IntersectionResult Intersection(const Point& p, const Direction& d, const CaerorGeometryState<RajaResource>& state) {};
   
 } // namespace caeror

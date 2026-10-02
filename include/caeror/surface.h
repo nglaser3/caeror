@@ -69,7 +69,8 @@ RAJA_HOST_DEVICE IntersectionResult Intersection(const Particle &p,
                                                  const double *data);
 
 template <SurfaceType Type>
-RAJA_HOST_DEVICE bool AlignedNormal(const Particle& p, const SenseResult sense, const double *data);
+RAJA_HOST_DEVICE bool AlignedNormal(const Particle &p, const SenseResult sense,
+                                    const double *data);
 
 // ============================================================================
 // Generic Plane
@@ -124,21 +125,23 @@ Intersection<SurfaceType::Plane>(const Particle &p, const double *data) {
 }
 
 template <>
-RAJA_HOST_DEVICE bool
-AlignedNormal<SurfaceType::Plane>(const Particle &p, const SenseResult sense, const double* data) {
+RAJA_HOST_DEVICE bool AlignedNormal<SurfaceType::Plane>(const Particle &p,
+                                                        const SenseResult sense,
+                                                        const double *data) {
   const double a = data[static_cast<int>(PlaneData::A)];
   const double b = data[static_cast<int>(PlaneData::B)];
   const double c = data[static_cast<int>(PlaneData::C)];
 
-  double dot = a*p.ux + b*p.uy + c*p.uz;
-  if (dot == 0.0) return false;
+  double dot = a * p.ux + b * p.uy + c * p.uz;
+  if (dot == 0.0)
+    return false;
   switch (sense) {
-    case SenseResult::Positive:
-      return dot > 0;
-    case SenseResult::Negative:
-      return dot < 0;
-    default:
-      return false;
+  case SenseResult::Positive:
+    return dot > 0;
+  case SenseResult::Negative:
+    return dot < 0;
+  default:
+    return false;
   }
 }
 
@@ -222,32 +225,33 @@ RAJA_HOST_DEVICE IntersectionResult Intersection<SurfaceType::AxisAlignedPlane>(
 }
 
 template <>
-RAJA_HOST_DEVICE bool
-AlignedNormal<SurfaceType::AxisAlignedPlane>(const Particle &p, const SenseResult sense, const double* data) {
+RAJA_HOST_DEVICE bool AlignedNormal<SurfaceType::AxisAlignedPlane>(
+    const Particle &p, const SenseResult sense, const double *data) {
   const Axis axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
 
   double dot;
   switch (axis) {
-    case Axis::X:
-      dot = p.ux;
-      break;
-    case Axis::Y:
-      dot = p.uy;
-      break;
-    case Axis::Z:
-      dot = p.uz;
-      break;
+  case Axis::X:
+    dot = p.ux;
+    break;
+  case Axis::Y:
+    dot = p.uy;
+    break;
+  case Axis::Z:
+    dot = p.uz;
+    break;
   }
 
-  if (dot == 0.0) return false;
+  if (dot == 0.0)
+    return false;
   switch (sense) {
-    case SenseResult::Positive:
-      return dot > 0;
-    case SenseResult::Negative:
-      return dot < 0;
-    default:
-      return false;
+  case SenseResult::Positive:
+    return dot > 0;
+  case SenseResult::Negative:
+    return dot < 0;
+  default:
+    return false;
   }
 }
 
@@ -357,8 +361,8 @@ Intersection<SurfaceType::AxisAlignedCylinder>(const Particle &p,
 }
 
 template <>
-RAJA_HOST_DEVICE bool
-AlignedNormal<SurfaceType::AxisAlignedCylinder>(const Particle &p, const SenseResult sense, const double* data) {
+RAJA_HOST_DEVICE bool AlignedNormal<SurfaceType::AxisAlignedCylinder>(
+    const Particle &p, const SenseResult sense, const double *data) {
   const Axis axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedCylinderData::Axis)]);
   const auto center1 = data[static_cast<int>(AxisAlignedCylinderData::Center1)];
@@ -366,25 +370,26 @@ AlignedNormal<SurfaceType::AxisAlignedCylinder>(const Particle &p, const SenseRe
 
   double dot;
   switch (axis) {
-    case Axis::X:
-      dot = (p.y - center1) * p.uy + (p.z - center2) * p.uz;
-      break;
-    case Axis::Y:
-      dot = (p.x - center1) * p.ux + (p.z - center2) * p.uz;
-      break;
-    case Axis::Z:
-      dot = (p.x - center1) * p.ux + (p.y - center2) * p.uy;
-      break;
+  case Axis::X:
+    dot = (p.y - center1) * p.uy + (p.z - center2) * p.uz;
+    break;
+  case Axis::Y:
+    dot = (p.x - center1) * p.ux + (p.z - center2) * p.uz;
+    break;
+  case Axis::Z:
+    dot = (p.x - center1) * p.ux + (p.y - center2) * p.uy;
+    break;
   }
 
-  if (dot == 0.0) return false;
+  if (dot == 0.0)
+    return false;
   switch (sense) {
-    case SenseResult::Positive:
-      return dot > 0;
-    case SenseResult::Negative:
-      return dot < 0;
-    default:
-      return false;
+  case SenseResult::Positive:
+    return dot > 0;
+  case SenseResult::Negative:
+    return dot < 0;
+  default:
+    return false;
   }
 }
 
@@ -450,23 +455,25 @@ Intersection<SurfaceType::Sphere>(const Particle &p, const double *data) {
   return {INFINITY, false};
 }
 
-template<>
+template <>
 RAJA_HOST_DEVICE bool
-AlignedNormal<SurfaceType::Sphere>(const Particle &p, const SenseResult sense, const double* data) {
+AlignedNormal<SurfaceType::Sphere>(const Particle &p, const SenseResult sense,
+                                   const double *data) {
   const double xc = data[static_cast<int>(SphereData::XCenter)];
   const double yc = data[static_cast<int>(SphereData::YCenter)];
   const double zc = data[static_cast<int>(SphereData::ZCenter)];
 
   double dot = (p.x - xc) * p.ux + (p.y - yc) * p.uy + (p.z - zc) * p.uz;
 
-  if (dot == 0.0) return false;
+  if (dot == 0.0)
+    return false;
   switch (sense) {
-    case SenseResult::Positive:
-      return dot > 0;
-    case SenseResult::Negative:
-      return dot < 0;
-    default:
-      return false;
+  case SenseResult::Positive:
+    return dot > 0;
+  case SenseResult::Negative:
+    return dot < 0;
+  default:
+    return false;
   }
 }
 
@@ -513,7 +520,9 @@ IntersectionResult Intersection(SurfaceType stype, const Particle &p,
   }
 }
 
-RAJA_HOST_DEVICE bool AlignedNormal(SurfaceType stype, const Particle &p, const SenseResult sense, const double* data) {
+RAJA_HOST_DEVICE bool AlignedNormal(SurfaceType stype, const Particle &p,
+                                    const SenseResult sense,
+                                    const double *data) {
   switch (stype) {
   case SurfaceType::Plane:
     return AlignedNormal<SurfaceType::Plane>(p, sense, data);
@@ -523,7 +532,7 @@ RAJA_HOST_DEVICE bool AlignedNormal(SurfaceType stype, const Particle &p, const 
     return AlignedNormal<SurfaceType::AxisAlignedCylinder>(p, sense, data);
   case SurfaceType::Sphere:
     return AlignedNormal<SurfaceType::Sphere>(p, sense, data);
-  } 
+  }
 }
 
 } // namespace caeror

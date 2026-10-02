@@ -104,34 +104,40 @@ template <typename RajaResource> struct CaerorGeometryState {
     if (SenseResult::On != Sense(stype, p, &surfaces(s, SurfaceDataIndex{1})))
       // not actually on a boundary, no cross possible
       return p.cell;
-    
+
     // loop over cells attached to the surface
     for (const auto lc : RAJA::range<LocalCellID>(0, surface_num_cells(s))) {
-      const auto& c = surface_cells(s, lc);
-      if (EnteringCell(p, c, s)) return c;
+      const auto &c = surface_cells(s, lc);
+      if (EnteringCell(p, c, s))
+        return c;
     }
     return CellID{MAXCaerorIndex};
   };
 
   RAJA_HOST_DEVICE
-  bool EnteringCell(const Particle &p, const CellID &c, const SurfaceID &s) const {
+  bool EnteringCell(const Particle &p, const CellID &c,
+                    const SurfaceID &s) const {
     RPNTokenIndex t{0};
-    while(*t < logic_sizes(c)) {
+    while (*t < logic_sizes(c)) {
       const auto &token = logic(c, t);
-      switch (token)
-      {
+      switch (token) {
       case RPN_NOT:
       case RPN_AND:
       case RPN_OR:
         break;
       default:
         const auto &surf = SurfaceID{token};
-        if (s != surf) break;
+        if (s != surf)
+          break;
         SurfaceDataIndex index{0};
         const auto &s_type = surfaces(s, index++);
-        const auto &surf_sense = (logic(c, t + 1) == RPN_NOT ? SenseResult::Negative : SenseResult::Positive);
-        const auto going_into_surface = AlignedNormal(s_type, p, surf_sense, &surfaces(s, index)); 
-        if (going_into_surface) return true;
+        const auto &surf_sense =
+            (logic(c, t + 1) == RPN_NOT ? SenseResult::Negative
+                                        : SenseResult::Positive);
+        const auto going_into_surface =
+            AlignedNormal(s_type, p, surf_sense, &surfaces(s, index));
+        if (going_into_surface)
+          return true;
         break;
       }
       t++;

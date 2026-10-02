@@ -72,7 +72,32 @@ namespace caeror {
     };
 
     RAJA_HOST_DEVICE
-    DistanceResult DistanceToSurface(const Particle& p) const;
+    DistanceResult DistanceToSurface(const Particle& p) const {
+      const auto& c = p.cell;
+      SurfaceID surf;
+      double min_distance = INFINITY;
+      for(const auto t : RAJA::range<RPNTokenIndex>(0, logic_sizes(c))) {
+        const auto& token = logic(c, t);
+        switch (token)
+        {
+        case RPN_NOT:
+        case RPN_AND:
+        case RPN_OR:
+          break;
+        default:
+          const auto& s = SurfaceID{token};
+          SurfaceDataIndex index{0};
+          const auto& s_type = surfaces(s, index++);
+          const auto& result = Intersection(s_type, p, &surfaces(s, index));
+          if (result.distance < min_distance) {
+            surf = s;
+            min_distance = result.distance;
+          }
+          break;
+        }
+      }
+      return {min_distance, surf};
+    };
 
     RAJA_HOST_DEVICE
     void CrossSurface(Particle& p, const SurfaceID& s) const;

@@ -108,6 +108,7 @@ namespace caeror {
         cell_mat_fill_ids_ = new CaerorIndexType[cells.size()];
         cell_uni_fill_ids_ = new CaerorIndexType[cells.size()];
         surface_cell_sizes_ = new size_t[num_surfaces_]{};
+        auto cell_sizes = new size_t[num_cells_]{};
         for (const auto& cell : cells) {
           const auto cell_id = *(cell->id_);
           cell_uni_fill_ids_[cell_id] = *(cell->universe_fill_);
@@ -121,16 +122,19 @@ namespace caeror {
               if(token != RPN_OR && token != RPN_AND && token != RPN_NOT) {
                 auto surf_id = static_cast<CaerorIndexType>(token);
                 surface_cell_sizes_[surf_id]++;
+                cell_sizes[cell_id]++;
               }
             }
           }
         }
 
         max_logic_size_ = *std::max_element(rpn_logic_sizes_, rpn_logic_sizes_+num_cells_);
-        max_surfaces_ = *std::max_element(surface_cell_sizes_, surface_cell_sizes_ + num_surfaces_);
+        max_cells_ = *std::max_element(surface_cell_sizes_, surface_cell_sizes_ + num_surfaces_);
+        max_surfaces_ = *std::max_element(cell_sizes, cell_sizes + num_cells_);
+        delete[] cell_sizes;
 
         rpn_logic_data_ = new RPNToken[max_logic_size_ * cells.size()];
-        surface_cell_ids_ = new CaerorIndexType[max_surfaces_ * num_surfaces_];
+        surface_cell_ids_ = new CaerorIndexType[max_cells_ * num_surfaces_];
         auto current_surf_index = new size_t[num_surfaces_]{};
         for (const auto& cell : cells) {
           const auto cell_id = *(cell->id_);
@@ -144,7 +148,7 @@ namespace caeror {
             if(token != RPN_OR && token != RPN_AND && token != RPN_NOT) {
               const auto& surf_id = static_cast<CaerorIndexType>(token);
               auto c_index = current_surf_index[surf_id]++;
-              auto index = max_surfaces_ * surf_id + c_index;
+              auto index = max_cells_ * surf_id + c_index;
               surface_cell_ids_[index] = cell_id;
             }
           }
@@ -187,10 +191,10 @@ namespace caeror {
         state.resource.memcpy(state.surfaces_data_, surfaces_data_, surf_size);
         state.surfaces = {state.surfaces_data_, num_surfaces_, max_surf_data_size_};
 
-        auto surf_cell_size = max_surfaces_ * num_surfaces_ * sizeof(CaerorIndexType);
+        auto surf_cell_size = max_cells_ * num_surfaces_ * sizeof(CaerorIndexType);
         state.surface_cell_ids_ = state.resource.allocate(surf_cell_size);
         state.resource.memcpy(state.surface_cell_ids, surface_cell_ids_, surf_cell_size);
-        state.surface_cells = {state.surface_cell_ids_, num_surfaces_, max_surfaces_};
+        state.surface_cells = {state.surface_cell_ids_, num_surfaces_, max_cells_};
 
         state.surface_cell_sizes_ = state.resource.allocate(num_surfaces_ * sizeof(size_t));
         state.resource.memcpy(state.surface_cell_sizes_, surface_cell_sizes_, num_surfaces_ * sizeof(size_t));
@@ -246,7 +250,9 @@ namespace caeror {
       CaerorIndexType* surface_cell_ids_;
       /// @brief 1d array for number of cells that own each surface
       size_t* surface_cell_sizes_;
-      /// @brief number of surfaces maximally on a cell
+      /// @brief max number of cell owners for a single surface
+      size_t max_cells_;
+      /// @brief max number of surfaces on cell
       size_t max_surfaces_;
       /// @brief 1d array mapping cell index to material id
       CaerorIndexType* cell_mat_fill_ids_;

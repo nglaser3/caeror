@@ -68,19 +68,15 @@ struct Surface : public SurfaceBase{
 
   /// @brief Data used to define the surface
   camp::tuple<DataTypes...> data_;
-
-  template <auto Index>
-  RAJA_HOST_DEVICE
-  decltype(auto) GetValue() const {
-    return camp::get<static_cast<size_t>(Index)>(data_);
-  }
-
-  RAJA_HOST_DEVICE
-  SenseResult Sense(const Point& p) const; 
-
-  RAJA_HOST_DEVICE
-  IntersectionResult Intersection(const Point& p, const Direction& d) const;
 };
+
+template <SurfaceType Type>
+RAJA_HOST_DEVICE
+SenseResult Sense(const Point& p, const double* data); 
+
+template <SurfaceType Type>
+RAJA_HOST_DEVICE
+IntersectionResult Intersection(const Point& p, const Direction& d, const double* data);
 
 // ============================================================================
 // Generic Plane
@@ -103,11 +99,11 @@ enum class PlaneData {
 
 template<>
 RAJA_HOST_DEVICE
-SenseResult Plane::Sense(const Point& p) const {
-  const double a = GetValue<PlaneData::A>();
-  const double b = GetValue<PlaneData::B>();
-  const double c = GetValue<PlaneData::C>();
-  const double d0 = GetValue<PlaneData::D>();
+SenseResult Sense<SurfaceType::Plane>(const Point& p, const double* data) {
+  const double a = data[PlaneData::A];
+  const double b = data[PlaneData::B];
+  const double c = data[PlaneData::C];
+  const double d0 = data[PlaneData::D];
 
   const double value = a * p.x + b * p.y + c * p.z + d0;
 
@@ -121,11 +117,11 @@ SenseResult Plane::Sense(const Point& p) const {
 
 template<>
 RAJA_HOST_DEVICE
-IntersectionResult Plane::Intersection(const Point& p, const Direction& d) const {
-  const double a = GetValue<PlaneData::A>();
-  const double b = GetValue<PlaneData::B>();
-  const double c = GetValue<PlaneData::C>();
-  const double d0 = GetValue<PlaneData::D>();
+IntersectionResult Intersection<SurfaceType::Plane>(const Point& p, const Direction& d, const double* data) {
+  const double a = data[PlaneData::A];
+  const double b = data[PlaneData::B];
+  const double c = data[PlaneData::C];
+  const double d0 = data[PlaneData::D];
 
   const double denom = a * d.x + b * d.y + c * d.z;
 
@@ -158,9 +154,9 @@ enum class AxisAlignedPlaneData {
 
 template<>
 RAJA_HOST_DEVICE
-SenseResult AxisAlignedPlane::Sense(const Point& p) const {
-  const Axis axis = GetValue<AxisAlignedPlaneData::Axis>();
-  const double intercept = GetValue<AxisAlignedPlaneData::Intercept>();
+SenseResult Sense<SurfaceType::AxisAlignedPlane>(const Point& p, const double* data) const {
+  const Axis axis = static_cast<Axis>(data[AxisAlignedPlaneData::Axis]);
+  const double intercept = data[AxisAlignedPlaneData::Intercept];
 
   double value = 0.0;
   
@@ -185,9 +181,9 @@ SenseResult AxisAlignedPlane::Sense(const Point& p) const {
 
 template<>
 RAJA_HOST_DEVICE
-IntersectionResult AxisAlignedPlane::Intersection(const Point& p, const Direction& d) const {
-  const Axis axis = GetValue<AxisAlignedPlaneData::Axis>();
-  const double intercept = GetValue<AxisAlignedPlaneData::Intercept>();
+IntersectionResult Intersection<SurfaceType::AxisAlignedPlane>(const Point& p, const Direction& d, const double* data) const {
+  const Axis axis = static_cast<Axis>(data[AxisAlignedPlaneData::Axis]);
+  const double intercept = data[AxisAlignedPlaneData::Intercept];
 
   double pos{0.0}, dir{0.0};
 
@@ -238,11 +234,11 @@ enum class AxisAlignedCylinderData {
 
 template <>
 RAJA_HOST_DEVICE
-SenseResult AxisAlignedCylinder::Sense(const Point& p) const {
-  const auto axis = GetValue<AxisAlignedCylinderData::Axis>();
-  const auto radius = GetValue<AxisAlignedCylinderData::Radius>();
-  const auto center1 = GetValue<AxisAlignedCylinderData::Center1>();
-  const auto center2 = GetValue<AxisAlignedCylinderData::Center2>();
+SenseResult Sense<SurfaceType::AxisAlignedCylinder>(const Point& p, const double* data) const {
+  const auto axis = data[AxisAlignedCylinderData::Axis];
+  const auto radius = data[AxisAlignedCylinderData::Radius];
+  const auto center1 = data[AxisAlignedCylinderData::Center1];
+  const auto center2 = data[AxisAlignedCylinderData::Center2];
 
   double diff1{0.0}, diff2{0.0};
 
@@ -272,11 +268,11 @@ SenseResult AxisAlignedCylinder::Sense(const Point& p) const {
 
 template <>
 RAJA_HOST_DEVICE
-IntersectionResult AxisAlignedCylinder::Intersection(const Point& p, const Direction& d) const {
-  const auto axis = GetValue<AxisAlignedCylinderData::Axis>();
-  const auto radius = GetValue<AxisAlignedCylinderData::Radius>();
-  const auto center1 = GetValue<AxisAlignedCylinderData::Center1>();
-  const auto center2 = GetValue<AxisAlignedCylinderData::Center2>();
+IntersectionResult Intersection<SurfaceType::AxisAlignedCylinder>(const Point& p, const Direction& d, const double* data) const {
+  const auto axis = data[AxisAlignedCylinderData::Axis];
+  const auto radius = data[AxisAlignedCylinderData::Radius];
+  const auto center1 = data[AxisAlignedCylinderData::Center1];
+  const auto center2 = data[AxisAlignedCylinderData::Center2];
 
   double diff1{0.0}, diff2{0.0};
   double dir1{0.0}, dir2{0.0};
@@ -344,11 +340,11 @@ enum class SphereData {
 
 template <>
 RAJA_HOST_DEVICE
-SenseResult Sphere::Sense(const Point& p) const {
-  const double radius = GetValue<SphereData::Radius>();
-  const double xc = GetValue<SphereData::XCenter>();
-  const double yc = GetValue<SphereData::YCenter>();
-  const double zc = GetValue<SphereData::ZCenter>();
+SenseResult Sense<SurfaceType::Sphere>(const Point& p, const double* data) const {
+  const double radius = data[SphereData::Radius];
+  const double xc = data[SphereData::XCenter];
+  const double yc = data[SphereData::YCenter];
+  const double zc = data[SphereData::ZCenter];
 
   double x = xc - p.x;
   double y = yc - p.y;
@@ -365,11 +361,11 @@ SenseResult Sphere::Sense(const Point& p) const {
 
 template <>
 RAJA_HOST_DEVICE
-IntersectionResult Sphere::Intersection(const Point& p, const Direction& d) const {
-  const double radius = GetValue<SphereData::Radius>();
-  const double xc = GetValue<SphereData::XCenter>();
-  const double yc = GetValue<SphereData::YCenter>();
-  const double zc = GetValue<SphereData::ZCenter>();
+IntersectionResult Intersection<SurfaceType::Sphere>(const Point& p, const Direction& d, const double* data) const {
+  const double radius = data[SphereData::Radius];
+  const double xc = data[SphereData::XCenter];
+  const double yc = data[SphereData::YCenter];
+  const double zc = data[SphereData::ZCenter];
 
   double x = p.x - xc;
   double y = p.y - yc;

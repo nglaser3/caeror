@@ -2,6 +2,7 @@
 
 #include "caeror/data.h"
 #include "caeror/raja_layouts.h"
+#include "caeror/stack.h"
 #include "caeror/surface.h"
 
 namespace caeror {
@@ -42,7 +43,33 @@ namespace caeror {
     }
 
     RAJA_HOST_DEVICE
-    bool InCell(const Particle& p, const CellID c) const;
+    bool InCell(const Particle& p, const CellID c) const {
+      bool stack_data[MAX_STACK_DEPTH];
+      Stack stack(stack_data);
+      for(const auto t : RAJA::range<RPNTokenIndex>(0, logic_sizes(c))) {
+        const auto& token = logic(c, t);
+        switch (token)
+        {
+        case RPN_NOT:
+          stack.Push(!stack.Pop());
+          break;
+        case RPN_AND:
+          stack.Push(stack.Pop() && stack.Pop());
+          break;
+        case RPN_OR:
+          stack.Push(stack.Pop() || stack.Pop());
+          break;
+        default:
+          const auto& s = SurfaceID{token};
+          SurfaceDataIndex index{0};
+          const auto& s_type = surfaces(s, index++);
+          const auto& sense = Sense(s_type, p, &surfaces(s, index));
+          stack.Push(sense == SenseResult::Positive);
+          break;
+        }
+      }
+      return stack.Pop();
+    };
 
     RAJA_HOST_DEVICE
     DistanceResult DistanceToSurface(const Particle& p) const;

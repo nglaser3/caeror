@@ -5,6 +5,8 @@
 #include "caeror/raja_layouts.h"
 
 namespace caeror {
+
+  constexpr size_t MAX_STACK_DEPTH = 16;
   
   template <typename DataType>
   class Stack{

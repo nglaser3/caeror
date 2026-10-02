@@ -102,7 +102,7 @@ namespace caeror {
       void GenerateCellsData(const GeometryConstructor& input) {
         const auto& cells = input.GetCells();
         num_cells_ = cells.size();
-        rpn_logic_sizes_ = new size_t[cells.size()];
+        rpn_logic_sizes_ = new size_t[cells.size()]{};
         cell_mat_fill_ids_ = new CaerorIndexType[cells.size()];
         cell_uni_fill_ids_ = new CaerorIndexType[cells.size()];
         surface_cell_sizes_ = new size_t[num_surfaces_]{};
@@ -113,7 +113,8 @@ namespace caeror {
           size_t logic_size = 0;
           if (*(cell->material_fill_) != MAXCaerorIndex) {
             const auto& logic = cell->region_.logic_;
-            logic_size = logic.size();
+            rpn_logic_sizes_[cell_id] = logic_size;
+            assert(cell->region_.stack_size < MAX_STACK_DEPTH);
             for (const auto& token : logic) {
               if(token != RPN_OR && token != RPN_AND && token != RPN_NOT) {
                 auto surf_id = static_cast<CaerorIndexType>(token);
@@ -121,7 +122,6 @@ namespace caeror {
               }
             }
           }
-          rpn_logic_sizes_[cell_id] = logic_size;
         }
 
         max_logic_size_ = *std::max_element(rpn_logic_sizes_, rpn_logic_sizes_+num_cells_);

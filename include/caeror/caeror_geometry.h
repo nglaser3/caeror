@@ -105,19 +105,31 @@ namespace caeror {
         rpn_logic_sizes_ = new size_t[cells.size()];
         cell_mat_fill_ids_ = new CaerorIndexType[cells.size()];
         cell_uni_fill_ids_ = new CaerorIndexType[cells.size()];
-        max_logic_size_ = 0;
+        surface_cell_sizes_ = new size_t[num_surfaces_]{};
         for (const auto& cell : cells) {
           const auto cell_id = *(cell->id_);
           cell_uni_fill_ids_[cell_id] = *(cell->universe_fill_);
           cell_mat_fill_ids_[cell_id] = *(cell->material_fill_);
           size_t logic_size = 0;
-          if (*(cell->material_fill_) != MAXCaerorIndex) 
-            logic_size = cell->region_.logic_.size();
+          if (*(cell->material_fill_) != MAXCaerorIndex) {
+            const auto& logic = cell->region_.logic_;
+            logic_size = logic.size();
+            for (const auto& token : logic) {
+              if(token != RPN_OR && token != RPN_AND && token != RPN_NOT) {
+                auto surf_id = static_cast<CaerorIndexType>(token);
+                surface_cell_sizes_[surf_id]++;
+              }
+            }
+          }
           rpn_logic_sizes_[cell_id] = logic_size;
-          if (logic_size > max_logic_size_) max_logic_size_ = logic_size;
         }
 
+        max_logic_size_ = *std::max_element(rpn_logic_sizes_, rpn_logic_sizes_+num_cells_);
+        max_surfaces_ = *std::max_element(surface_cell_sizes_, surface_cell_sizes_ + num_surfaces_);
+
         rpn_logic_data_ = new RPNToken[max_logic_size_ * cells.size()];
+        surface_cell_ids_ = new CaerorIndexType[max_surfaces_ * num_surfaces_];
+        auto current_surf_index = new size_t[num_surfaces_]{};
         for (const auto& cell : cells) {
           const auto cell_id = *(cell->id_);
           if (cell_mat_fill_ids_[cell_id] == MAXCaerorIndex) continue;
@@ -126,7 +138,17 @@ namespace caeror {
           for (size_t local_index = 0; local_index < logic.size(); local_index++) {
             rpn_logic_data_[rpn_offset + local_index] = logic[local_index];
           }
+          for (const auto& token : logic) {
+            if(token != RPN_OR && token != RPN_AND && token != RPN_NOT) {
+              const auto& surf_id = static_cast<CaerorIndexType>(token);
+              auto c_index = current_surf_index[surf_id]++;
+              auto index = max_surfaces_ * surf_id + c_index;
+              surface_cell_ids_[index] = cell_id;
+            }
+          }
         }
+
+        delete[] current_surf_index;
       }
 
       void GenerateUniverseData(const GeometryConstructor& input) {
@@ -162,6 +184,15 @@ namespace caeror {
         state.surfaces_data_ = state.resource.allocate(surf_size);
         state.resource.memcpy(state.surfaces_data_, surfaces_data_, surf_size);
         state.surfaces = {state.surfaces_data_, num_surfaces_, max_surf_data_size_};
+
+        auto surf_cell_size = max_surfaces_ * num_surfaces_ * sizeof(CaerorIndexType);
+        state.surface_cell_ids_ = state.resource.allocate(surf_cell_size);
+        state.resource.memcpy(state.surface_cell_ids, surface_cell_ids_, surf_cell_size);
+        state.surface_cells = {state.surface_cell_ids_, num_surfaces_, max_surfaces_};
+
+        state.surface_cell_sizes_ = state.resource.allocate(num_surfaces_ * sizeof(size_t));
+        state.resource.memcpy(state.surface_cell_sizes_, surface_cell_sizes_, num_surfaces_ * sizeof(size_t));
+        state.surface_num_cells = {state.surface_cell_sizes_, num_surfaces_};
 
         auto logic_size = num_cells_ * max_logic_size_ * sizeof(RPNToken);
         state.rpn_logic_data_ = state.resource.allocate(logic_size);
@@ -209,6 +240,12 @@ namespace caeror {
       size_t* rpn_logic_sizes_;
       /// @brief second dimension size for rpn logic
       size_t max_logic_size_;
+      /// @brief 2d array mapping surfaces to owning cells
+      CaerorIndexType* surface_cell_ids_;
+      /// @brief 1d array for number of cells that own each surface
+      size_t* surface_cell_sizes_;
+      /// @brief number of surfaces maximally on a cell
+      size_t max_surfaces_;
       /// @brief 1d array mapping cell index to material id
       CaerorIndexType* cell_mat_fill_ids_;
       ///@brief 1d array mapping cell index to universe id

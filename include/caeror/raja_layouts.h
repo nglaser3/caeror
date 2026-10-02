@@ -28,6 +28,7 @@ namespace caeror {
 
   using SurfaceDataLayout = CaerorLayout<SurfaceID, SurfaceDataIndex>;
   using SurfaceCellLayout = CaerorLayout<SurfaceID, LocalCellID>;
+  using SurfaceLayout = CaerorLayout<SurfaceID>;
   using CellLayout = CaerorLayout<CellID>;
   using RPNTokenLayout = CaerorLayout<CellID, RPNTokenIndex>;
   using UniverseLayout = CaerorLayout<UniverseID>;

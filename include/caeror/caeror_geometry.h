@@ -22,6 +22,8 @@ namespace caeror {
 
         delete[] rpn_logic_data_;
         delete[] rpn_logic_sizes_;
+        delete[] surface_cell_ids_;
+        delete[] surface_cell_sizes_;
         delete[] cell_mat_fill_ids_;
         delete[] cell_uni_fill_ids_;
 

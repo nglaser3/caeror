@@ -1,18 +1,16 @@
 #pragma once
 #include <cmath>
 
-#include <RAJA/RAJA.hpp>
 #include "caeror/raja_layouts.h"
+#include <RAJA/RAJA.hpp>
 
-namespace caeror
-{
-struct Point{
+namespace caeror {
+struct Particle {
   double x, y, z;
-};
-
-struct Direction{
   double mu, phi;
-  double x, y, z;
+  double ux, uy, uz;
+
+  CellID cell;
 
   RAJA_HOST_DEVICE
   void UpdateXYZ() {
@@ -21,13 +19,5 @@ struct Direction{
     y = sin_theta * sin(phi);
     z = mu;
   }
-};
-
-struct Particle{
-  double x, y, z;
-  double mu, phi;
-  double ux, uy, uz;
-  
-  CellID cell;
 };
 } // namespace caeror

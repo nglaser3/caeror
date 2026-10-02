@@ -6,36 +6,27 @@
 
 namespace caeror {
 
-  constexpr size_t MAX_STACK_DEPTH = 16;
-  
-  template <typename DataType>
-  class Stack{
-    public:
-      RAJA_HOST_DEVICE
-      Stack(DataType* data)
-        : eval_stack_(data),
-          size_(){}
+constexpr size_t MAX_STACK_DEPTH = 16;
 
-      RAJA_HOST_DEVICE
-      void Push(DataType value) {
-        eval_stack_[size_++] = value;
-      }
+template <typename DataType> class Stack {
+public:
+  RAJA_HOST_DEVICE
+  Stack(DataType *data) : eval_stack_(data), size_() {}
 
-      RAJA_HOST_DEVICE
-      DataType Pop() {
-        return eval_stack_[--size_];
-      }
+  RAJA_HOST_DEVICE
+  void Push(DataType value) { eval_stack_[size_++] = value; }
 
-      RAJA_HOST_DEVICE
-      void Clear() {
-        size_ = 0;
-      }
+  RAJA_HOST_DEVICE
+  DataType Pop() { return eval_stack_[--size_]; }
 
-      RAJA_HOST_DEVICE
-      bool Empty() const {return size_ == 0;}
+  RAJA_HOST_DEVICE
+  void Clear() { size_ = 0; }
 
-    private:
-      DataType* eval_stack_;
-      CaerorIndexType size_;
-  };
+  RAJA_HOST_DEVICE
+  bool Empty() const { return size_ == 0; }
+
+private:
+  DataType *eval_stack_;
+  CaerorIndexType size_;
+};
 } // namespace caeror

@@ -74,7 +74,7 @@ namespace caeror {
     RAJA_HOST_DEVICE
     DistanceResult DistanceToSurface(const Particle& p) const {
       const auto& c = p.cell;
-      SurfaceID surf;
+      SurfaceID surf{MAXCaerorIndex};
       double min_distance = INFINITY;
       for(const auto t : RAJA::range<RPNTokenIndex>(0, logic_sizes(c))) {
         const auto& token = logic(c, t);
@@ -100,7 +100,7 @@ namespace caeror {
     };
 
     RAJA_HOST_DEVICE
-    void CrossSurface(Particle& p, const SurfaceID& s) const;
+    CellID CrossSurface(const Particle& p, const SurfaceID& s) const;
 
     private:
       friend class CaerorGeometry;

@@ -42,10 +42,10 @@ using RPNTokenLayout = CaerorLayout<CellID, RPNTokenIndex>;
 using UniverseLayout = CaerorLayout<UniverseID>;
 using UniverseCellLayout = CaerorLayout<UniverseID, LocalCellID>;
 
-template <typename DataType, typename... IndexTypes>
-using CaerorView = RAJA::View<const DataType, CaerorLayout<IndexTypes...>>;
+template <typename DataType, typename LayoutType>
+using CaerorView = RAJA::View<const DataType, LayoutType>;
 
-template <typename DataType, typename... IndexTypes>
-using CaerorWritableView = RAJA::View<DataType, CaerorLayout<IndexTypes...>>;
+template <typename DataType, typename LayoutType>
+using CaerorWritableView = RAJA::View<DataType, LayoutType>;
 
 } // namespace caeror

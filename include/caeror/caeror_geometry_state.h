@@ -18,28 +18,28 @@ struct DistanceResult {
 template <typename RajaResource> struct CaerorGeometryState {
   RajaResource resource;
 
-  CaerorView<const double, SurfaceDataLayout> surfaces;
+  CaerorView<double, SurfaceDataLayout> surfaces;
 
-  CaerorView<const CellID, SurfaceCellLayout> surface_cells;
+  CaerorView<CellID, SurfaceCellLayout> surface_cells;
 
-  CaerorView<const size_t, SurfaceLayout> surface_num_cells;
+  CaerorView<size_t, SurfaceLayout> surface_num_cells;
 
-  CaerorView<const RPNToken, RPNTokenLayout> logic;
+  CaerorView<RPNToken, RPNTokenLayout> logic;
 
-  CaerorView<const size_t, CellLayout> logic_sizes;
+  CaerorView<size_t, CellLayout> logic_sizes;
 
-  CaerorView<const MaterialID, CellLayout> material_fills;
+  CaerorView<MaterialID, CellLayout> material_fills;
 
-  CaerorView<const UniverseID, CellLayout> universe_fills;
+  CaerorView<UniverseID, CellLayout> universe_fills;
 
-  CaerorView<const CellID, UniverseCellLayout> universe_cells;
+  CaerorView<CellID, UniverseCellLayout> universe_cells;
 
-  CaerorView<const size_t, UniverseLayout> universe_sizes;
+  CaerorView<size_t, UniverseLayout> universe_sizes;
 
   RAJA_HOST_DEVICE
   CellID FindCell(const Particle &p) const {
     for (const auto &cell :
-         RAJA::range<CellID>(0, logic.get_layout().template size<0>())) {
+         RAJA::range<CellID>(0, logic.get_layout().template get_dim_size<0>())) {
       if (InCell(p, cell))
         return cell;
     }
@@ -152,15 +152,15 @@ private:
   friend class CaerorGeometry;
 
   double *surfaces_data_;
-  CaerorIndexType *surface_cell_ids_;
+  CellID *surface_cell_ids_;
   size_t *surface_cell_sizes_;
 
   RPNToken *rpn_logic_data_;
   size_t *rpn_logic_sizes_;
-  CaerorIndexType *cell_mat_fill_ids_;
-  CaerorIndexType *cell_uni_fill_ids_;
+  MaterialID *cell_mat_fill_ids_;
+  UniverseID *cell_uni_fill_ids_;
 
-  CaerorIndexType *uni_cell_ids_;
+  CellID *uni_cell_ids_;
   size_t *uni_cell_sizes_;
 };
 } // namespace caeror

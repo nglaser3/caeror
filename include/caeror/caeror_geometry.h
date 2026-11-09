@@ -117,14 +117,14 @@ public:
     const auto &cells = input.GetCells();
     num_cells_ = cells.size();
     rpn_logic_sizes_ = new size_t[cells.size()]{};
-    cell_mat_fill_ids_ = new CaerorIndexType[cells.size()];
-    cell_uni_fill_ids_ = new CaerorIndexType[cells.size()];
+    cell_mat_fill_ids_ = new MaterialID[cells.size()];
+    cell_uni_fill_ids_ = new UniverseID[cells.size()];
     surface_cell_sizes_ = new size_t[num_surfaces_]{};
     auto cell_sizes = new size_t[num_cells_]{};
     for (const auto &cell : cells) {
       const auto cell_id = *(cell->id_);
-      cell_uni_fill_ids_[cell_id] = *(cell->universe_fill_);
-      cell_mat_fill_ids_[cell_id] = *(cell->material_fill_);
+      cell_uni_fill_ids_[cell_id] = cell->universe_fill_;
+      cell_mat_fill_ids_[cell_id] = cell->material_fill_;
       size_t logic_size = 0;
       if (*(cell->material_fill_) != MAXCaerorIndex) {
         const auto &logic = cell->region_.logic_;
@@ -148,11 +148,11 @@ public:
     delete[] cell_sizes;
 
     rpn_logic_data_ = new RPNToken[max_logic_size_ * cells.size()];
-    surface_cell_ids_ = new CaerorIndexType[max_cells_ * num_surfaces_];
+    surface_cell_ids_ = new CellID[max_cells_ * num_surfaces_];
     auto current_surf_index = new size_t[num_surfaces_]{};
     for (const auto &cell : cells) {
       const auto cell_id = *(cell->id_);
-      if (cell_mat_fill_ids_[cell_id] == MAXCaerorIndex)
+      if (cell_mat_fill_ids_[cell_id] == MaterialID{MAXCaerorIndex})
         continue;
       auto rpn_offset = max_logic_size_ * (*(cell->id_));
       const auto &logic = cell->region_.logic_;
@@ -164,7 +164,7 @@ public:
           const auto &surf_id = static_cast<CaerorIndexType>(token);
           auto c_index = current_surf_index[surf_id]++;
           auto index = max_cells_ * surf_id + c_index;
-          surface_cell_ids_[index] = cell_id;
+          surface_cell_ids_[index] = cell->id_;
         }
       }
     }
@@ -185,13 +185,13 @@ public:
         max_uni_cells_ = num_cells;
     }
 
-    uni_cell_ids_ = new CaerorIndexType[max_uni_cells_ * universes.size()];
+    uni_cell_ids_ = new CellID[max_uni_cells_ * universes.size()];
     for (const auto &universe : universes) {
       const auto uni_id = *(universe->id_);
       const auto offset = max_uni_cells_ * uni_id;
       for (size_t local_index = 0; local_index < universe->cells_.size();
            local_index++) {
-        const auto cell_id = *(universe->cells_[local_index]);
+        const auto cell_id = universe->cells_[local_index];
         uni_cell_ids_[offset + local_index] = cell_id;
       }
     }
@@ -203,53 +203,58 @@ public:
     state.resource = RajaResource{};
 
     auto surf_size = num_surfaces_ * max_surf_data_size_ * sizeof(double);
-    state.surfaces_data_ = state.resource.allocate(surf_size);
+    state.surfaces_data_ =
+        state.resource.template allocate<double>(num_surfaces_ * max_surf_data_size_);
     state.resource.memcpy(state.surfaces_data_, surfaces_data_, surf_size);
     state.surfaces = {state.surfaces_data_, num_surfaces_, max_surf_data_size_};
 
-    auto surf_cell_size = max_cells_ * num_surfaces_ * sizeof(CaerorIndexType);
-    state.surface_cell_ids_ = state.resource.allocate(surf_cell_size);
-    state.resource.memcpy(state.surface_cell_ids, surface_cell_ids_,
+    auto surf_cell_size = max_cells_ * num_surfaces_ * sizeof(CellID);
+    state.surface_cell_ids_ =
+        state.resource.template allocate<CellID>(max_cells_ * num_surfaces_);
+    state.resource.memcpy(state.surface_cell_ids_, surface_cell_ids_,
                           surf_cell_size);
     state.surface_cells = {state.surface_cell_ids_, num_surfaces_, max_cells_};
 
     state.surface_cell_sizes_ =
-        state.resource.allocate(num_surfaces_ * sizeof(size_t));
+        state.resource.template allocate<size_t>(num_surfaces_);
     state.resource.memcpy(state.surface_cell_sizes_, surface_cell_sizes_,
                           num_surfaces_ * sizeof(size_t));
     state.surface_num_cells = {state.surface_cell_sizes_, num_surfaces_};
 
     auto logic_size = num_cells_ * max_logic_size_ * sizeof(RPNToken);
-    state.rpn_logic_data_ = state.resource.allocate(logic_size);
+    state.rpn_logic_data_ =
+        state.resource.template allocate<RPNToken>(num_cells_ * max_logic_size_);
     state.resource.memcpy(state.rpn_logic_data_, rpn_logic_data_, logic_size);
     state.logic = {state.rpn_logic_data_, num_cells_, max_logic_size_};
 
     state.rpn_logic_sizes_ =
-        state.resource.allocate(num_cells_ * sizeof(size_t));
+        state.resource.template allocate<size_t>(num_cells_);
     state.resource.memcpy(state.rpn_logic_sizes_, rpn_logic_sizes_,
                           num_cells_ * sizeof(size_t));
     state.logic_sizes = {state.rpn_logic_sizes_, num_cells_};
 
-    auto cell_size = num_cells_ * sizeof(CaerorIndexType);
-    state.cell_mat_fill_ids_ = state.resource.allocate(cell_size);
+    auto material_size = num_cells_ * sizeof(MaterialID);
+    auto universe_size = num_cells_ * sizeof(UniverseID);
+    state.cell_mat_fill_ids_ = state.resource.template allocate<MaterialID>(num_cells_);
     state.resource.memcpy(state.cell_mat_fill_ids_, cell_mat_fill_ids_,
-                          cell_size);
-    state.material_fills = {state.cell_mat_fill_ids_, cell_size};
+                          material_size);
+    state.material_fills = {state.cell_mat_fill_ids_, num_cells_};
 
-    state.cell_uni_fill_ids_ = state.resource.allocate(cell_size);
+    state.cell_uni_fill_ids_ = state.resource.template allocate<UniverseID>(num_cells_);
     state.resource.memcpy(state.cell_uni_fill_ids_, cell_uni_fill_ids_,
-                          cell_size);
-    state.universe_fills = {state.cell_uni_fill_ids_, cell_size};
+                          universe_size);
+    state.universe_fills = {state.cell_uni_fill_ids_, num_cells_};
 
     auto unicell_size =
-        num_universes_ * max_uni_cells_ * sizeof(CaerorIndexType);
-    state.uni_cell_ids_ = state.resource.allocate(unicell_size);
+        num_universes_ * max_uni_cells_ * sizeof(CellID);
+    state.uni_cell_ids_ =
+        state.resource.template allocate<CellID>(num_universes_ * max_uni_cells_);
     state.resource.memcpy(state.uni_cell_ids_, uni_cell_ids_, unicell_size);
     state.universe_cells = {state.uni_cell_ids_, num_universes_,
                             max_uni_cells_};
 
     auto uni_size = num_universes_ * sizeof(size_t);
-    state.uni_cell_sizes_ = state.resource.allocate(uni_size);
+    state.uni_cell_sizes_ = state.resource.template allocate<size_t>(num_universes_);
     state.resource.memcpy(state.uni_cell_sizes_, uni_cell_sizes_, uni_size);
     state.universe_sizes = {state.uni_cell_sizes_, num_universes_};
     return state;
@@ -272,7 +277,7 @@ private:
   /// @brief second dimension size for rpn logic
   size_t max_logic_size_;
   /// @brief 2d array mapping surfaces to owning cells
-  CaerorIndexType *surface_cell_ids_;
+  CellID *surface_cell_ids_;
   /// @brief 1d array for number of cells that own each surface
   size_t *surface_cell_sizes_;
   /// @brief max number of cell owners for a single surface
@@ -280,14 +285,14 @@ private:
   /// @brief max number of surfaces on cell
   size_t max_surfaces_;
   /// @brief 1d array mapping cell index to material id
-  CaerorIndexType *cell_mat_fill_ids_;
+  MaterialID *cell_mat_fill_ids_;
   ///@brief 1d array mapping cell index to universe id
-  CaerorIndexType *cell_uni_fill_ids_;
+  UniverseID *cell_uni_fill_ids_;
 
   /// @brief Number of universes
   size_t num_universes_;
   /// @brief 2d array for cells in universes
-  CaerorIndexType *uni_cell_ids_;
+  CellID *uni_cell_ids_;
   /// @brief 1d array for length of universe cells
   size_t *uni_cell_sizes_;
   /// @brief second dimension size for universe cell ids

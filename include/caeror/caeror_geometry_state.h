@@ -65,7 +65,8 @@ template <typename RajaResource> struct CaerorGeometryState {
       default:
         const auto &s = SurfaceID{token};
         SurfaceDataIndex index{0};
-        const auto &s_type = surfaces(s, index++);
+        const auto s_type =
+            static_cast<SurfaceType>(surfaces(s, index++));
         const auto &sense = Sense(s_type, p, &surfaces(s, index));
         stack.Push(sense != SenseResult::Negative);
         break;
@@ -89,11 +90,12 @@ template <typename RajaResource> struct CaerorGeometryState {
       default:
         const auto &s = SurfaceID{token};
         SurfaceDataIndex index{0};
-        const auto &s_type = surfaces(s, index++);
+        const auto s_type =
+            static_cast<SurfaceType>(surfaces(s, index++));
         const auto &result = Intersection(s_type, p, &surfaces(s, index));
-        if (result.distance < min_distance) {
+        if (result.valid_ && result.distance_ < min_distance) {
           surf = s;
-          min_distance = result.distance;
+          min_distance = result.distance_;
         }
         break;
       }
@@ -103,7 +105,8 @@ template <typename RajaResource> struct CaerorGeometryState {
 
   RAJA_HOST_DEVICE
   CellID CrossSurface(const Particle &p, const SurfaceID &s) const {
-    const auto stype = surfaces(s, SurfaceDataIndex{0});
+    const auto stype =
+        static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{0}));
     if (SenseResult::On != Sense(stype, p, &surfaces(s, SurfaceDataIndex{1})))
       // not actually on a boundary, no cross possible
       return p.cell;
@@ -133,7 +136,8 @@ template <typename RajaResource> struct CaerorGeometryState {
         if (s != surf)
           break;
         SurfaceDataIndex index{0};
-        const auto &s_type = surfaces(s, index++);
+        const auto s_type =
+            static_cast<SurfaceType>(surfaces(s, index++));
         const auto &surf_sense =
             (logic(c, t + 1) == RPN_NOT ? SenseResult::Negative
                                         : SenseResult::Positive);

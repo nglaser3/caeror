@@ -504,6 +504,7 @@ inline SenseResult Sense(SurfaceType stype, const Particle &p, const double *dat
   case SurfaceType::Sphere:
     return Sense<SurfaceType::Sphere>(p, data);
   }
+  return SenseResult::On;
 }
 
 RAJA_HOST_DEVICE
@@ -519,6 +520,7 @@ inline IntersectionResult Intersection(SurfaceType stype, const Particle &p,
   case SurfaceType::Sphere:
     return Intersection<SurfaceType::Sphere>(p, data);
   }
+  return {INFINITY, false};
 }
 
 RAJA_HOST_DEVICE inline bool AlignedNormal(SurfaceType stype, const Particle &p,
@@ -534,6 +536,7 @@ RAJA_HOST_DEVICE inline bool AlignedNormal(SurfaceType stype, const Particle &p,
   case SurfaceType::Sphere:
     return AlignedNormal<SurfaceType::Sphere>(p, sense, data);
   }
+  return false;
 }
 
 } // namespace caeror

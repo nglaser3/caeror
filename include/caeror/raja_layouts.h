@@ -1,5 +1,10 @@
 #pragma once
 
+#include <cstdint>
+#include <limits>
+
+#include <RAJA/RAJA.hpp>
+
 namespace caeror {
 // ==========================================================================
 // Index definitions

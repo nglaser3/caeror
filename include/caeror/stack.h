@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include <RAJA/RAJA.hpp>
 
 #include "caeror/raja_layouts.h"

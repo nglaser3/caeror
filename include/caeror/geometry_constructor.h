@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+#include <camp/tuple.hpp>
 #include <memory>
 #include <vector>
 
@@ -40,7 +42,7 @@ private:
 };
 
 template <>
-Cell GeometryConstructor::CreateCell<MaterialID>(const Region region,
+inline Cell GeometryConstructor::CreateCell<MaterialID>(const Region region,
                                                  const MaterialID fill_id) {
   auto id = cells_.size();
   auto cell_ptr = std::make_unique<Cell>(CellID{id}, region);
@@ -50,7 +52,7 @@ Cell GeometryConstructor::CreateCell<MaterialID>(const Region region,
 }
 
 template <>
-Cell GeometryConstructor::CreateCell<Universe>(const Region region,
+inline Cell GeometryConstructor::CreateCell<Universe>(const Region region,
                                                const Universe fill) {
   auto id = cells_.size();
   auto cell_ptr = std::make_unique<Cell>(CellID{id}, region);

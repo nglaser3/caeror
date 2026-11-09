@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cmath>
 
 #include <RAJA/RAJA.hpp>
@@ -86,7 +87,7 @@ template <> struct SurfaceTraits<SurfaceType::Plane> {
 enum class PlaneData { A, B, C, D };
 
 template <>
-RAJA_HOST_DEVICE SenseResult Sense<SurfaceType::Plane>(const Particle &p,
+RAJA_HOST_DEVICE inline SenseResult Sense<SurfaceType::Plane>(const Particle &p,
                                                        const double *data) {
   const double a = data[static_cast<int>(PlaneData::A)];
   const double b = data[static_cast<int>(PlaneData::B)];
@@ -104,7 +105,7 @@ RAJA_HOST_DEVICE SenseResult Sense<SurfaceType::Plane>(const Particle &p,
 }
 
 template <>
-RAJA_HOST_DEVICE IntersectionResult
+RAJA_HOST_DEVICE inline IntersectionResult
 Intersection<SurfaceType::Plane>(const Particle &p, const double *data) {
   const double a = data[static_cast<int>(PlaneData::A)];
   const double b = data[static_cast<int>(PlaneData::B)];
@@ -125,7 +126,7 @@ Intersection<SurfaceType::Plane>(const Particle &p, const double *data) {
 }
 
 template <>
-RAJA_HOST_DEVICE bool AlignedNormal<SurfaceType::Plane>(const Particle &p,
+RAJA_HOST_DEVICE inline bool AlignedNormal<SurfaceType::Plane>(const Particle &p,
                                                         const SenseResult sense,
                                                         const double *data) {
   const double a = data[static_cast<int>(PlaneData::A)];
@@ -159,7 +160,7 @@ template <> struct SurfaceTraits<SurfaceType::AxisAlignedPlane> {
 enum class AxisAlignedPlaneData { Axis, Intercept };
 
 template <>
-RAJA_HOST_DEVICE SenseResult
+RAJA_HOST_DEVICE inline SenseResult
 Sense<SurfaceType::AxisAlignedPlane>(const Particle &p, const double *data) {
   const Axis axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
@@ -189,7 +190,7 @@ Sense<SurfaceType::AxisAlignedPlane>(const Particle &p, const double *data) {
 }
 
 template <>
-RAJA_HOST_DEVICE IntersectionResult Intersection<SurfaceType::AxisAlignedPlane>(
+RAJA_HOST_DEVICE inline IntersectionResult Intersection<SurfaceType::AxisAlignedPlane>(
     const Particle &p, const double *data) {
   const Axis axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
@@ -225,7 +226,7 @@ RAJA_HOST_DEVICE IntersectionResult Intersection<SurfaceType::AxisAlignedPlane>(
 }
 
 template <>
-RAJA_HOST_DEVICE bool AlignedNormal<SurfaceType::AxisAlignedPlane>(
+RAJA_HOST_DEVICE inline bool AlignedNormal<SurfaceType::AxisAlignedPlane>(
     const Particle &p, const SenseResult sense, const double *data) {
   const Axis axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
@@ -271,7 +272,7 @@ template <> struct SurfaceTraits<SurfaceType::AxisAlignedCylinder> {
 enum class AxisAlignedCylinderData { Axis, Radius, Center1, Center2 };
 
 template <>
-RAJA_HOST_DEVICE SenseResult
+RAJA_HOST_DEVICE inline SenseResult
 Sense<SurfaceType::AxisAlignedCylinder>(const Particle &p, const double *data) {
   const auto axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedCylinderData::Axis)]);
@@ -306,7 +307,7 @@ Sense<SurfaceType::AxisAlignedCylinder>(const Particle &p, const double *data) {
 }
 
 template <>
-RAJA_HOST_DEVICE IntersectionResult
+RAJA_HOST_DEVICE inline IntersectionResult
 Intersection<SurfaceType::AxisAlignedCylinder>(const Particle &p,
                                                const double *data) {
   const auto axis =
@@ -361,7 +362,7 @@ Intersection<SurfaceType::AxisAlignedCylinder>(const Particle &p,
 }
 
 template <>
-RAJA_HOST_DEVICE bool AlignedNormal<SurfaceType::AxisAlignedCylinder>(
+RAJA_HOST_DEVICE inline bool AlignedNormal<SurfaceType::AxisAlignedCylinder>(
     const Particle &p, const SenseResult sense, const double *data) {
   const Axis axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedCylinderData::Axis)]);
@@ -407,7 +408,7 @@ template <> struct SurfaceTraits<SurfaceType::Sphere> {
 enum class SphereData { Radius, XCenter, YCenter, ZCenter };
 
 template <>
-RAJA_HOST_DEVICE SenseResult Sense<SurfaceType::Sphere>(const Particle &p,
+RAJA_HOST_DEVICE inline SenseResult Sense<SurfaceType::Sphere>(const Particle &p,
                                                         const double *data) {
   const double radius = data[static_cast<int>(SphereData::Radius)];
   const double xc = data[static_cast<int>(SphereData::XCenter)];
@@ -428,7 +429,7 @@ RAJA_HOST_DEVICE SenseResult Sense<SurfaceType::Sphere>(const Particle &p,
 }
 
 template <>
-RAJA_HOST_DEVICE IntersectionResult
+RAJA_HOST_DEVICE inline IntersectionResult
 Intersection<SurfaceType::Sphere>(const Particle &p, const double *data) {
   const double radius = data[static_cast<int>(SphereData::Radius)];
   const double xc = data[static_cast<int>(SphereData::XCenter)];
@@ -456,7 +457,7 @@ Intersection<SurfaceType::Sphere>(const Particle &p, const double *data) {
 }
 
 template <>
-RAJA_HOST_DEVICE bool
+RAJA_HOST_DEVICE inline bool
 AlignedNormal<SurfaceType::Sphere>(const Particle &p, const SenseResult sense,
                                    const double *data) {
   const double xc = data[static_cast<int>(SphereData::XCenter)];
@@ -492,7 +493,7 @@ template <SurfaceType Type> RAJA_HOST_DEVICE size_t SurfaceDataReq() {
 }
 
 RAJA_HOST_DEVICE
-SenseResult Sense(SurfaceType stype, const Particle &p, const double *data) {
+inline SenseResult Sense(SurfaceType stype, const Particle &p, const double *data) {
   switch (stype) {
   case SurfaceType::Plane:
     return Sense<SurfaceType::Plane>(p, data);
@@ -506,7 +507,7 @@ SenseResult Sense(SurfaceType stype, const Particle &p, const double *data) {
 }
 
 RAJA_HOST_DEVICE
-IntersectionResult Intersection(SurfaceType stype, const Particle &p,
+inline IntersectionResult Intersection(SurfaceType stype, const Particle &p,
                                 const double *data) {
   switch (stype) {
   case SurfaceType::Plane:
@@ -520,7 +521,7 @@ IntersectionResult Intersection(SurfaceType stype, const Particle &p,
   }
 }
 
-RAJA_HOST_DEVICE bool AlignedNormal(SurfaceType stype, const Particle &p,
+RAJA_HOST_DEVICE inline bool AlignedNormal(SurfaceType stype, const Particle &p,
                                     const SenseResult sense,
                                     const double *data) {
   switch (stype) {

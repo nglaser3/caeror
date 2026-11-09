@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cmath>
+#include <cstddef>
+
 #include "caeror/data.h"
 #include "caeror/raja_layouts.h"
 #include "caeror/stack.h"

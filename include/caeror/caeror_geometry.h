@@ -1,5 +1,9 @@
 #pragma once
 
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+
 #include <RAJA/RAJA.hpp>
 #include <camp/tuple.hpp>
 

@@ -5,7 +5,10 @@
 blt_add_executable(
     NAME caeror_tests
     SOURCES
-        surface.test.cc
+        surfaces/plane.test.cc
+        surfaces/axis_aligned_plane.test.cc
+        surfaces/sphere.test.cc
+        surfaces/axis_aligned_cylinder.test.cc
     DEPENDS_ON
         caeror
         gtest

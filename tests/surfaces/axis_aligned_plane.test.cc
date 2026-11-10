@@ -71,10 +71,10 @@ TEST(AxisAlignedPlane, Intersection) {
       {0.0, -1.0, 0.0, true},
       {-3.0, 0.6, 5.0, true},       // Oblique unit directions.
       {3.0, -0.6, 5.0, true},
+      {-1.0, TOLERANCE, 1.0 / TOLERANCE, true}, // Nearly parallel, approaching.
+      {1.0, -TOLERANCE, 1.0 / TOLERANCE, true},
       {-1.0, -TOLERANCE, INF, false},
       {1.0, TOLERANCE, INF, false},
-      {-TOLERANCE, 1.0, TOLERANCE, true}, // TOLERANCE positive distances.
-      {TOLERANCE, -1.0, TOLERANCE, true},
   };
   for (Axis axis : {Axis::X, Axis::Y, Axis::Z}) {
     for (double intercept : {-4.0, 0.0, 4.0}) {

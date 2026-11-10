@@ -6,6 +6,7 @@ blt_add_executable(
     NAME caeror_tests
     SOURCES
         region.test.cc
+        stack.test.cc
         surfaces/plane.test.cc
         surfaces/axis_aligned_plane.test.cc
         surfaces/sphere.test.cc

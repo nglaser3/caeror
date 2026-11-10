@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cmath>
+#include <utility>
 
 #include <RAJA/RAJA.hpp>
 #include <camp/tuple.hpp>
@@ -41,6 +42,9 @@ enum class SurfaceType {
 template <SurfaceType Type> struct SurfaceTraits;
 
 struct SurfaceBase {
+  explicit SurfaceBase(SurfaceID id) : id_(id) {}
+  virtual ~SurfaceBase() = default;
+
   /// @brief Unique ID associated with this surface
   const SurfaceID id_;
 };
@@ -51,6 +55,8 @@ struct SurfaceBase {
  */
 template <SurfaceType Type, typename... DataTypes>
 struct Surface : public SurfaceBase {
+  Surface(SurfaceID id, camp::tuple<DataTypes...> data)
+      : SurfaceBase(id), data_(std::move(data)) {}
 
   /// @brief Type of the surface
   static constexpr SurfaceType surface_type_ = Type;

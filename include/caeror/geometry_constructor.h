@@ -17,11 +17,12 @@ class GeometryConstructor {
 public:
   template <SurfaceType Type, typename... DataTypes>
   auto CreateSurface(camp::tuple<DataTypes...> &&data) {
-    auto id = surfaces_.size();
-    auto surf_ptr = std::make_unique<Surface<Type, DataTypes...>>(id, data);
+    const auto id = SurfaceID{surfaces_.size()};
+    auto surf_ptr =
+        std::make_unique<Surface<Type, DataTypes...>>(id, std::move(data));
     surface_types_.push_back(surf_ptr->surface_type_);
     surfaces_.push_back(std::move(surf_ptr));
-    return static_cast<Surface<Type, DataTypes...>>(*surfaces_.back());
+    return static_cast<const Surface<Type, DataTypes...> &>(*surfaces_.back());
   }
 
   template <typename FillIDType>

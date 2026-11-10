@@ -9,6 +9,7 @@ blt_add_executable(
         surfaces/axis_aligned_plane.test.cc
         surfaces/sphere.test.cc
         surfaces/axis_aligned_cylinder.test.cc
+        surfaces/dispatch.test.cc
     DEPENDS_ON
         caeror
         gtest

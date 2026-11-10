@@ -15,6 +15,26 @@
 namespace caeror {
 class GeometryConstructor {
 public:
+  // Plane equation: a*x + b*y + c*z + d = 0.
+  Plane CreatePlane(double a, double b, double c, double d) {
+    return CreateSurface<SurfaceType::Plane>(camp::make_tuple(a, b, c, d));
+  }
+
+  AxisAlignedPlane CreateAxisAlignedPlane(Axis axis, double intercept) {
+    return CreateSurface<SurfaceType::AxisAlignedPlane>(
+        camp::make_tuple(axis, intercept));
+  }
+
+  Sphere CreateSphere(double radius, double x, double y, double z) {
+    return CreateSurface<SurfaceType::Sphere>(camp::make_tuple(radius, x, y, z));
+  }
+
+  AxisAlignedCylinder CreateAxisAlignedCylinder(Axis axis, double radius,
+                                                double center1, double center2) {
+    return CreateSurface<SurfaceType::AxisAlignedCylinder>(
+        camp::make_tuple(axis, radius, center1, center2));
+  }
+
   template <SurfaceType Type, typename... DataTypes>
   auto CreateSurface(camp::tuple<DataTypes...> &&data) {
     const auto id = SurfaceID{surfaces_.size()};

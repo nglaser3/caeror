@@ -17,30 +17,26 @@ TEST(GeometryConstructor, StartsEmpty) {
 
 TEST(GeometryConstructor, MixedSurfaces) {
   GeometryConstructor geometry;
-  const auto plane = geometry.CreateSurface<SurfaceType::Plane>(
-      camp::make_tuple(1.0, -2.0, 3.0, -4.0));
+  const auto plane = geometry.CreatePlane(1.0, -2.0, 3.0, -4.0);
   EXPECT_EQ(plane.id_, SurfaceID{0});
   EXPECT_DOUBLE_EQ(camp::get<0>(plane.data_), 1.0);
   EXPECT_DOUBLE_EQ(camp::get<1>(plane.data_), -2.0);
   EXPECT_DOUBLE_EQ(camp::get<2>(plane.data_), 3.0);
   EXPECT_DOUBLE_EQ(camp::get<3>(plane.data_), -4.0);
 
-  const auto aligned = geometry.CreateSurface<SurfaceType::AxisAlignedPlane>(
-      camp::make_tuple(Axis::Y, -5.0));
+  const auto aligned = geometry.CreateAxisAlignedPlane(Axis::Y, -5.0);
   EXPECT_EQ(aligned.id_, SurfaceID{1});
   EXPECT_EQ(camp::get<0>(aligned.data_), Axis::Y);
   EXPECT_DOUBLE_EQ(camp::get<1>(aligned.data_), -5.0);
 
-  const auto sphere = geometry.CreateSurface<SurfaceType::Sphere>(
-      camp::make_tuple(6.0, 7.0, -8.0, 9.0));
+  const auto sphere = geometry.CreateSphere(6.0, 7.0, -8.0, 9.0);
   EXPECT_EQ(sphere.id_, SurfaceID{2});
   EXPECT_DOUBLE_EQ(camp::get<0>(sphere.data_), 6.0);
   EXPECT_DOUBLE_EQ(camp::get<1>(sphere.data_), 7.0);
   EXPECT_DOUBLE_EQ(camp::get<2>(sphere.data_), -8.0);
   EXPECT_DOUBLE_EQ(camp::get<3>(sphere.data_), 9.0);
 
-  const auto cylinder = geometry.CreateSurface<SurfaceType::AxisAlignedCylinder>(
-      camp::make_tuple(Axis::Z, 10.0, -11.0, 12.0));
+  const auto cylinder = geometry.CreateAxisAlignedCylinder(Axis::Z, 10.0, -11.0, 12.0);
   EXPECT_EQ(cylinder.id_, SurfaceID{3});
   EXPECT_EQ(camp::get<0>(cylinder.data_), Axis::Z);
   EXPECT_DOUBLE_EQ(camp::get<1>(cylinder.data_), 10.0);
@@ -62,10 +58,8 @@ TEST(GeometryConstructor, MixedSurfaces) {
 TEST(GeometryConstructor, MaterialCells) {
   GeometryConstructor geometry;
 
-  const auto a = geometry.CreateSurface<SurfaceType::AxisAlignedPlane>(
-      camp::make_tuple(Axis::X, -1.0));
-  const auto b = geometry.CreateSurface<SurfaceType::AxisAlignedPlane>(
-      camp::make_tuple(Axis::X, 1.0));
+  const auto a = geometry.CreateAxisAlignedPlane(Axis::X, -1.0);
+  const auto b = geometry.CreateAxisAlignedPlane(Axis::X, 1.0);
 
   const auto region = +a && -b;
   const auto first = geometry.CreateCell(region, MaterialID{0});
@@ -94,8 +88,7 @@ TEST(GeometryConstructor, MaterialCells) {
 TEST(GeometryConstructor, UniversesAndUniverseFill) {
   GeometryConstructor geometry;
 
-  const auto plane = geometry.CreateSurface<SurfaceType::AxisAlignedPlane>(
-      camp::make_tuple(Axis::X, 0.0));
+  const auto plane = geometry.CreateAxisAlignedPlane(Axis::X, 0.0);
 
   const auto first = geometry.CreateCell(+plane, MaterialID{0});
   const auto second = geometry.CreateCell(-plane, MaterialID{1});

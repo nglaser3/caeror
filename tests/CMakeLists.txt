@@ -5,6 +5,7 @@
 blt_add_executable(
     NAME caeror_tests
     SOURCES
+        geometry_constructor.test.cc
         region.test.cc
         stack.test.cc
         surfaces/plane.test.cc

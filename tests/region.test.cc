@@ -74,7 +74,6 @@ TEST(Region, NestedExpressions) {
   EXPECT_EQ(balanced.logic_, expected_balanced);
   EXPECT_EQ(balanced.stack_size, 3);
 
-  // The deeper left operand determines the required depth here.
   auto deeper_left = (+a && (+b && +c)) || +d;
   const std::vector<RPNToken> expected_deeper_left = {
       0, 1, 2, RPN_AND, RPN_AND, 3, RPN_OR};

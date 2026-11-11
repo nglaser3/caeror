@@ -36,7 +36,7 @@ public:
   }
 
   template <SurfaceType Type, typename... DataTypes>
-  auto CreateSurface(camp::tuple<DataTypes...> &&data) {
+  Surface<Type, DataTypes...> CreateSurface(camp::tuple<DataTypes...> &&data) {
     const auto id = SurfaceID{surfaces_.size()};
     auto surf_ptr =
         std::make_unique<Surface<Type, DataTypes...>>(id, std::move(data));

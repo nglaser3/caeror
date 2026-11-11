@@ -349,9 +349,9 @@ TEST(CaerorGeometryState, CrossSlabsBothDirections) {
     p.ux = direction;
     p.cell = direction > 0.0 ? CellID{0} : CellID{1};
     auto next = direction > 0.0 ? CellID{1} : CellID{0};
-    auto entering = state.EnteringCell(p, next, SurfaceID{1});
+    auto entering = state.InCell(p, next);
     EXPECT_TRUE(entering);
-    auto leaving = state.EnteringCell(p, p.cell, SurfaceID{1});
+    auto leaving = state.InCell(p, p.cell);
     EXPECT_FALSE(leaving);
     auto result = state.CrossSurface(p, SurfaceID{1});
     EXPECT_EQ(result, next);
@@ -395,13 +395,13 @@ TEST(CaerorGeometryState, CrossingChecksEntireCandidateRegion) {
   p.y = -1.0;
   p.ux = 1.0;
   p.cell = CellID{2};
-  auto entering = state.EnteringCell(p, CellID{0}, x.id_);
+  auto entering = state.InCell(p, CellID{0});
   EXPECT_FALSE(entering);
   auto result = state.CrossSurface(p, x.id_);
   EXPECT_EQ(result, CellID{1});
 }
 
-TEST(CaerorGeometryState, EnteringComplementOfIntersection) {
+TEST(CaerorGeometryState, ComplementBoundaryMembership) {
   GeometryConstructor input;
   auto x = input.CreateAxisAlignedPlane(Axis::X, 0.0);
   auto y = input.CreateAxisAlignedPlane(Axis::Y, 0.0);
@@ -411,7 +411,7 @@ TEST(CaerorGeometryState, EnteringComplementOfIntersection) {
   Particle p{};
   p.y = 1.0;
   p.ux = -1.0;
-  auto result = state.EnteringCell(p, CellID{0}, x.id_);
+  auto result = state.InCell(p, CellID{0});
   EXPECT_TRUE(result);
 }
 
@@ -426,7 +426,7 @@ TEST(CaerorGeometryState, TraceSlabsWithoutNudging) {
   for (CaerorIndexType i = 0; i < 2; ++i) {
     ASSERT_EQ(p.cell, CellID{i});
     auto material = state.material_fills(p.cell);
-    EXPECT_EQ(material, i == 0 ? MaterialID{10} : MaterialID{20});
+    EXPECT_EQ(material, i == 0 ? MaterialID{1} : MaterialID{2});
     auto boundary = state.DistanceToCellBoundary(p);
     ASSERT_DOUBLE_EQ(boundary.distance, i == 0 ? 1.0 : 3.0);
     ASSERT_EQ(boundary.surface, SurfaceID{i + 1});

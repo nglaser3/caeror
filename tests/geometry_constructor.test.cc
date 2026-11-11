@@ -51,8 +51,29 @@ TEST(GeometryConstructor, MixedSurfaces) {
       SurfaceType::Sphere, SurfaceType::AxisAlignedCylinder};
   EXPECT_EQ(geometry.GetSurfaceTypes(), expected_types);
 
-  for (size_t i = 0; i < surfaces.size(); ++i) 
+  for (size_t i = 0; i < surfaces.size(); ++i) {
     EXPECT_EQ(surfaces[i]->id_, SurfaceID{i});
+    EXPECT_EQ(surfaces[i]->bc_, BoundaryCondition::Transmission);
+  }
+}
+
+TEST(GeometryConstructor, SurfaceBoundaryConditions) {
+  GeometryConstructor geometry;
+  auto plane = geometry.CreatePlane(1.0, 0.0, 0.0, 0.0, BoundaryCondition::Vacuum);
+  auto aligned = geometry.CreateAxisAlignedPlane(Axis::X, 0.0, BoundaryCondition::Vacuum);
+  auto sphere = geometry.CreateSphere(2.0, 0.0, 0.0, 0.0, BoundaryCondition::Vacuum);
+  auto cylinder = geometry.CreateAxisAlignedCylinder(Axis::Z, 2.0, 0.0, 0.0, BoundaryCondition::Vacuum);
+  EXPECT_EQ(plane.bc_, BoundaryCondition::Vacuum);
+  EXPECT_EQ(aligned.bc_, BoundaryCondition::Vacuum);
+  EXPECT_EQ(sphere.bc_, BoundaryCondition::Vacuum);
+  EXPECT_EQ(cylinder.bc_, BoundaryCondition::Vacuum);
+  for (const auto &surface : geometry.GetSurfaces())
+    EXPECT_EQ(surface->bc_, BoundaryCondition::Vacuum);
+
+  EXPECT_EQ(plane.data_size_, 6);
+  EXPECT_EQ(aligned.data_size_, 4);
+  EXPECT_EQ(sphere.data_size_, 6);
+  EXPECT_EQ(cylinder.data_size_, 6);
 }
 
 TEST(GeometryConstructor, MaterialCells) {

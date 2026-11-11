@@ -30,6 +30,14 @@ struct IntersectionResult {
 enum Axis : int { X, Y, Z };
 
 /**
+ * @brief Enum of allowed BCs
+ */
+enum BoundaryCondition : int {
+  Transmission,
+  Vacuum,
+};
+
+/**
  * @brief Enum of all allowed surface types
  */
 enum class SurfaceType {
@@ -42,11 +50,13 @@ enum class SurfaceType {
 template <SurfaceType Type> struct SurfaceTraits;
 
 struct SurfaceBase {
-  explicit SurfaceBase(SurfaceID id) : id_(id) {}
+  explicit SurfaceBase(SurfaceID id, BoundaryCondition bc = BoundaryCondition::Transmission)
+      : id_(id), bc_(bc) {}
   virtual ~SurfaceBase() = default;
 
   /// @brief Unique ID associated with this surface
   const SurfaceID id_;
+  const BoundaryCondition bc_;
 };
 
 /**
@@ -55,14 +65,15 @@ struct SurfaceBase {
  */
 template <SurfaceType Type, typename... DataTypes>
 struct Surface : public SurfaceBase {
-  Surface(SurfaceID id, camp::tuple<DataTypes...> data)
-      : SurfaceBase(id), data_(std::move(data)) {}
+  Surface(SurfaceID id, camp::tuple<DataTypes...> data,
+          BoundaryCondition bc = BoundaryCondition::Transmission)
+      : SurfaceBase(id, bc), data_(std::move(data)) {}
 
   /// @brief Type of the surface
   static constexpr SurfaceType surface_type_ = Type;
 
   /// @brief Data requirements
-  static constexpr size_t data_size_ = sizeof...(DataTypes) + 1;
+  static constexpr size_t data_size_ = sizeof...(DataTypes) + 2;
 
   /// @brief Data used to define the surface
   camp::tuple<DataTypes...> data_;

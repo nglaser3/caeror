@@ -17,7 +17,7 @@ TEST(CaerorGeometry, KobayashiSurfaces) {
   auto state = geometry.GetState<RAJA::resources::Host>();
 
   ASSERT_EQ(state.surfaces.get_layout().get_dim_size<0>(), 15);
-  ASSERT_EQ(state.surfaces.get_layout().get_dim_size<1>(), 3);
+  ASSERT_EQ(state.surfaces.get_layout().get_dim_size<1>(), 4);
   const double intercepts[] = {
       0, 10, 30, 40, 60, 0, 10, 50, 60, 100, 0, 10, 30, 40, 60};
   for (CaerorIndexType i = 0; i < 15; ++i) {

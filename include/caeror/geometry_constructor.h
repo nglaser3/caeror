@@ -16,30 +16,37 @@ namespace caeror {
 class GeometryConstructor {
 public:
   // Plane equation: a*x + b*y + c*z + d = 0.
-  Plane CreatePlane(double a, double b, double c, double d) {
-    return CreateSurface<SurfaceType::Plane>(camp::make_tuple(a, b, c, d));
+  Plane CreatePlane(double a, double b, double c, double d,
+                    BoundaryCondition bc = BoundaryCondition::Transmission) {
+    return CreateSurface<SurfaceType::Plane>(camp::make_tuple(a, b, c, d), bc);
   }
 
-  AxisAlignedPlane CreateAxisAlignedPlane(Axis axis, double intercept) {
+  AxisAlignedPlane CreateAxisAlignedPlane(
+      Axis axis, double intercept,
+      BoundaryCondition bc = BoundaryCondition::Transmission) {
     return CreateSurface<SurfaceType::AxisAlignedPlane>(
-        camp::make_tuple(axis, intercept));
+        camp::make_tuple(axis, intercept), bc);
   }
 
-  Sphere CreateSphere(double radius, double x, double y, double z) {
-    return CreateSurface<SurfaceType::Sphere>(camp::make_tuple(radius, x, y, z));
+  Sphere CreateSphere(double radius, double x, double y, double z,
+                      BoundaryCondition bc = BoundaryCondition::Transmission) {
+    return CreateSurface<SurfaceType::Sphere>(camp::make_tuple(radius, x, y, z), bc);
   }
 
   AxisAlignedCylinder CreateAxisAlignedCylinder(Axis axis, double radius,
-                                                double center1, double center2) {
+                                                double center1, double center2,
+                                                BoundaryCondition bc = BoundaryCondition::Transmission) {
     return CreateSurface<SurfaceType::AxisAlignedCylinder>(
-        camp::make_tuple(axis, radius, center1, center2));
+        camp::make_tuple(axis, radius, center1, center2), bc);
   }
 
   template <SurfaceType Type, typename... DataTypes>
-  Surface<Type, DataTypes...> CreateSurface(camp::tuple<DataTypes...> &&data) {
+  Surface<Type, DataTypes...> CreateSurface(
+      camp::tuple<DataTypes...> &&data,
+      BoundaryCondition bc = BoundaryCondition::Transmission) {
     const auto id = SurfaceID{surfaces_.size()};
     auto surf_ptr =
-        std::make_unique<Surface<Type, DataTypes...>>(id, std::move(data));
+        std::make_unique<Surface<Type, DataTypes...>>(id, std::move(data), bc);
     surface_types_.push_back(surf_ptr->surface_type_);
     surfaces_.push_back(std::move(surf_ptr));
     return static_cast<const Surface<Type, DataTypes...> &>(*surfaces_.back());

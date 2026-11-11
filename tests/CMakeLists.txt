@@ -6,6 +6,7 @@ blt_add_executable(
     NAME caeror_tests
     SOURCES
         caeror_geometry.test.cc
+        caeror_geometry_state.test.cc
         geometry_constructor.test.cc
         region.test.cc
         stack.test.cc

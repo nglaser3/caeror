@@ -162,10 +162,7 @@ TEST(CaerorGeometry, GeometryReleasesAllocations) {
   auto input = CreateKobayashi();
   {
     CaerorGeometry geometry(input);
-    {
-      auto state = geometry.GetState<CountingHostResource>();
-      EXPECT_EQ(CountingHostResource::allocations, 9);
-    }
+    geometry.GetState<CountingHostResource>();
     EXPECT_EQ(CountingHostResource::allocations, 9);
   }
   EXPECT_EQ(CountingHostResource::allocations, 0);

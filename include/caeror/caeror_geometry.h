@@ -49,7 +49,7 @@ public:
     max_surf_data_size_ = 0;
     for (size_t surf_id = 0; surf_id < surface_types.size(); surf_id++) {
       auto stype = surface_types[surf_id];
-      size_t data_size;
+      size_t data_size = 0;
       switch (stype) {
       case SurfaceType::Plane:
         data_size = SurfaceDataReq<SurfaceType::Plane>();

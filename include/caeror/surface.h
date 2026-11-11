@@ -237,7 +237,7 @@ RAJA_HOST_DEVICE inline bool AlignedNormal<SurfaceType::AxisAlignedPlane>(
   const Axis axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
 
-  double dot;
+  double dot = 0.0;
   switch (axis) {
   case Axis::X:
     dot = p.ux;
@@ -375,7 +375,7 @@ RAJA_HOST_DEVICE inline bool AlignedNormal<SurfaceType::AxisAlignedCylinder>(
   const auto center1 = data[static_cast<int>(AxisAlignedCylinderData::Center1)];
   const auto center2 = data[static_cast<int>(AxisAlignedCylinderData::Center2)];
 
-  double dot;
+  double dot = 0.0;
   switch (axis) {
   case Axis::X:
     dot = (p.y - center1) * p.uy + (p.z - center2) * p.uz;

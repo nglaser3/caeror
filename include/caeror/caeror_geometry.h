@@ -3,18 +3,18 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <vector>
 
 #include <RAJA/RAJA.hpp>
 #include <camp/tuple.hpp>
 
+#include "caeror/caeror_geometry_state.h"
 #include "caeror/geometry_constructor.h"
 #include "caeror/raja_layouts.h"
 #include "caeror/stack.h"
 
 namespace caeror {
-
-template <typename RajaResource> struct CaerorGeometryState;
 
 class CaerorGeometry {
 public:
@@ -28,6 +28,8 @@ public:
   CaerorGeometry &operator=(const CaerorGeometry &) = delete;
 
   ~CaerorGeometry() {
+    for (auto &release : release_resource_data_) release();
+
     delete[] surfaces_data_;
 
     delete[] rpn_logic_data_;
@@ -193,10 +195,41 @@ public:
   }
 
   template <typename RajaResource>
-  CaerorGeometryState<RajaResource> GetState() const;
+  CaerorGeometryState GetState(RajaResource resource = {}) & {
+    CaerorGeometryData data{};
+    data.num_surfaces = num_surfaces_;
+    data.surface_width = max_surf_data_size_;
+    data.max_cells = max_cells_;
+    data.num_cells = num_cells_;
+    data.logic_width = max_logic_size_;
+    data.num_universes = num_universes_;
+    data.universe_width = max_uni_cells_;
+    auto copy = [&]<typename T>(T *&destination, const T *source, size_t count) {
+      destination = resource.template allocate<T>(count);
+      release_resource_data_.emplace_back([resource, destination]() mutable {
+        resource.deallocate(destination);
+      });
+      resource.memcpy(destination, source, count * sizeof(T));
+    };
+    copy(data.surfaces_data, surfaces_data_, num_surfaces_ * max_surf_data_size_);
+    copy(data.surface_cell_ids, surface_cell_ids_, num_surfaces_ * max_cells_);
+    copy(data.surface_cell_sizes, surface_cell_sizes_, num_surfaces_);
+    copy(data.rpn_logic_data, rpn_logic_data_, num_cells_ * max_logic_size_);
+    copy(data.rpn_logic_sizes, rpn_logic_sizes_, num_cells_);
+    copy(data.cell_mat_fill_ids, cell_mat_fill_ids_, num_cells_);
+    copy(data.cell_uni_fill_ids, cell_uni_fill_ids_, num_cells_);
+    copy(data.uni_cell_ids, uni_cell_ids_, num_universes_ * max_uni_cells_);
+    copy(data.uni_cell_sizes, uni_cell_sizes_, num_universes_);
+    resource.wait();
+    return CaerorGeometryState(data);
+  }
+
+  template <typename RajaResource>
+  CaerorGeometryState GetState(RajaResource resource = {}) && = delete;
 
 private:
-  template <typename> friend struct CaerorGeometryState;
+  /// @brief Host cleanup functions for arrays allocated through GetState
+  std::vector<std::function<void()>> release_resource_data_;
 
   /// @brief Number of surfaces
   size_t num_surfaces_;

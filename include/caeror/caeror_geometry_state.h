@@ -15,9 +15,26 @@ struct DistanceResult {
   SurfaceID surface;
 };
 
-template <typename RajaResource> struct CaerorGeometryState {
-  RajaResource resource;
+struct CaerorGeometryData {
+  double *surfaces_data = nullptr;
+  CellID *surface_cell_ids = nullptr;
+  size_t *surface_cell_sizes = nullptr;
+  RPNToken *rpn_logic_data = nullptr;
+  size_t *rpn_logic_sizes = nullptr;
+  MaterialID *cell_mat_fill_ids = nullptr;
+  UniverseID *cell_uni_fill_ids = nullptr;
+  CellID *uni_cell_ids = nullptr;
+  size_t *uni_cell_sizes = nullptr;
+  size_t num_surfaces = 0;
+  size_t surface_width = 0;
+  size_t max_cells = 0;
+  size_t num_cells = 0;
+  size_t logic_width = 0;
+  size_t num_universes = 0;
+  size_t universe_width = 0;
+};
 
+struct CaerorGeometryState {
   CaerorView<double, SurfaceDataLayout> surfaces;
 
   CaerorView<CellID, SurfaceCellLayout> surface_cells;
@@ -35,6 +52,23 @@ template <typename RajaResource> struct CaerorGeometryState {
   CaerorView<CellID, UniverseCellLayout> universe_cells;
 
   CaerorView<size_t, UniverseLayout> universe_sizes;
+
+  RAJA_HOST_DEVICE
+  explicit CaerorGeometryState(const CaerorGeometryData &data)
+      : surfaces(data.surfaces_data, data.num_surfaces, data.surface_width),
+        surface_cells(data.surface_cell_ids, data.num_surfaces, data.max_cells),
+        surface_num_cells(data.surface_cell_sizes, data.num_surfaces),
+        logic(data.rpn_logic_data, data.num_cells, data.logic_width),
+        logic_sizes(data.rpn_logic_sizes, data.num_cells),
+        material_fills(data.cell_mat_fill_ids, data.num_cells),
+        universe_fills(data.cell_uni_fill_ids, data.num_cells),
+        universe_cells(data.uni_cell_ids, data.num_universes, data.universe_width),
+        universe_sizes(data.uni_cell_sizes, data.num_universes) {}
+
+  RAJA_HOST_DEVICE
+  CaerorGeometryState(const CaerorGeometryState &) = default;
+
+  CaerorGeometryState &operator=(const CaerorGeometryState &) = delete;
 
   RAJA_HOST_DEVICE
   CellID FindCell(const Particle &p) const {
@@ -151,20 +185,5 @@ template <typename RajaResource> struct CaerorGeometryState {
     }
     return false;
   }
-
-private:
-  friend class CaerorGeometry;
-
-  double *surfaces_data_;
-  CellID *surface_cell_ids_;
-  size_t *surface_cell_sizes_;
-
-  RPNToken *rpn_logic_data_;
-  size_t *rpn_logic_sizes_;
-  MaterialID *cell_mat_fill_ids_;
-  UniverseID *cell_uni_fill_ids_;
-
-  CellID *uni_cell_ids_;
-  size_t *uni_cell_sizes_;
 };
 } // namespace caeror

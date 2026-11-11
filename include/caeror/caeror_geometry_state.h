@@ -90,12 +90,18 @@ struct CaerorGeometryState {
       case RPN_NOT:
         stack.Push(!stack.Pop());
         break;
-      case RPN_AND:
-        stack.Push(stack.Pop() && stack.Pop());
+      case RPN_AND: {
+        const bool lhs = stack.Pop();
+        const bool rhs = stack.Pop();
+        stack.Push(lhs && rhs);
         break;
-      case RPN_OR:
-        stack.Push(stack.Pop() || stack.Pop());
+      }
+      case RPN_OR: {
+        const bool lhs = stack.Pop();
+        const bool rhs = stack.Pop();
+        stack.Push(lhs || rhs);
         break;
+      }
       default:
         const auto &s = SurfaceID{token};
         SurfaceDataIndex index{0};

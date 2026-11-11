@@ -193,7 +193,7 @@ TEST(CaerorGeometryState, ParallelRayHasNoBoundary) {
   p.x = 1.0;
   p.uy = 1.0;
   p.cell = CellID{0};
-  auto result = state.DistanceToSurface(p);
+  auto result = state.DistanceToCellBoundary(p);
   EXPECT_EQ(result.distance, INF);
   EXPECT_EQ(result.surface, SurfaceID{MAXCaerorIndex});
 }
@@ -209,6 +209,9 @@ TEST(CaerorGeometryState, StartingOnEntranceSkipsZeroDistance) {
   auto result = state.DistanceToSurface(p);
   EXPECT_DOUBLE_EQ(result.distance, 3.0);
   EXPECT_EQ(result.surface, SurfaceID{2});
+  auto boundary = state.DistanceToCellBoundary(p);
+  EXPECT_DOUBLE_EQ(boundary.distance, 3.0);
+  EXPECT_EQ(boundary.surface, SurfaceID{2});
 }
 
 TEST(CaerorGeometryState, StartingOnExitReportsZeroDistance) {
@@ -222,6 +225,9 @@ TEST(CaerorGeometryState, StartingOnExitReportsZeroDistance) {
   auto result = state.DistanceToSurface(p);
   EXPECT_DOUBLE_EQ(result.distance, 0.0);
   EXPECT_EQ(result.surface, SurfaceID{1});
+  auto boundary = state.DistanceToCellBoundary(p);
+  EXPECT_DOUBLE_EQ(boundary.distance, 0.0);
+  EXPECT_EQ(boundary.surface, SurfaceID{1});
 }
 
 TEST(CaerorGeometryState, UnionSkipsInternalSurface) {
@@ -236,12 +242,45 @@ TEST(CaerorGeometryState, UnionSkipsInternalSurface) {
   p.x = 1.0;
   p.ux = 1.0;
   p.cell = CellID{0};
-  auto result = state.DistanceToSurface(p);
+  auto result = state.DistanceToCellBoundary(p);
   EXPECT_DOUBLE_EQ(result.distance, 4.0);
   EXPECT_EQ(result.surface, right.id_);
   p.x = 2.0;
   auto crossed = state.CrossSurface(p, middle.id_);
   EXPECT_EQ(crossed, p.cell);
+}
+
+TEST(CaerorGeometryState, UnionReportsInternalSurface) {
+  GeometryConstructor input;
+  auto left = input.CreateAxisAlignedPlane(Axis::X, 0.0);
+  auto middle = input.CreateAxisAlignedPlane(Axis::X, 2.0);
+  auto right = input.CreateAxisAlignedPlane(Axis::X, 5.0);
+  input.CreateCell((+left && -middle) || (+middle && -right), MaterialID{0});
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+  Particle p{};
+  p.x = 1.0;
+  p.ux = 1.0;
+  p.cell = CellID{0};
+  auto result = state.DistanceToSurface(p);
+  EXPECT_DOUBLE_EQ(result.distance, 1.0);
+  EXPECT_EQ(result.surface, middle.id_);
+}
+
+TEST(CaerorGeometryState, BoundaryBeyondOverlappingSpheres) {
+  GeometryConstructor input;
+  auto first = input.CreateSphere(2.0, 0.0, 0.0, 0.0);
+  auto second = input.CreateSphere(2.0, 2.0, 0.0, 0.0);
+  input.CreateCell(-first || -second, MaterialID{0});
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+  Particle p{};
+  p.x = 0.0;
+  p.ux = 1.0;
+  p.cell = CellID{0};
+  auto result = state.DistanceToCellBoundary(p);
+  EXPECT_DOUBLE_EQ(result.distance, 4.0);
+  EXPECT_EQ(result.surface, second.id_);
 }
 
 TEST(CaerorGeometryState, CurvedSurfaceDistances) {
@@ -295,7 +334,7 @@ TEST(CaerorGeometryState, TangentSphereIsNotACrossing) {
   p.y = 1.0;
   p.ux = 1.0;
   p.cell = CellID{0};
-  auto result = state.DistanceToSurface(p);
+  auto result = state.DistanceToCellBoundary(p);
   EXPECT_DOUBLE_EQ(result.distance, 5.0);
   EXPECT_EQ(result.surface, right.id_);
 }
@@ -388,7 +427,7 @@ TEST(CaerorGeometryState, TraceSlabsWithoutNudging) {
     ASSERT_EQ(p.cell, CellID{i});
     auto material = state.material_fills(p.cell);
     EXPECT_EQ(material, i == 0 ? MaterialID{10} : MaterialID{20});
-    auto boundary = state.DistanceToSurface(p);
+    auto boundary = state.DistanceToCellBoundary(p);
     ASSERT_DOUBLE_EQ(boundary.distance, i == 0 ? 1.0 : 3.0);
     ASSERT_EQ(boundary.surface, SurfaceID{i + 1});
     p.x += boundary.distance * p.ux;
@@ -436,7 +475,7 @@ TEST(CaerorGeometryState, TraceKobayashiAlongY) {
     ASSERT_EQ(p.cell, CellID{cells[i]});
     auto material = state.material_fills(p.cell);
     EXPECT_EQ(material, MaterialID{cells[i]});
-    auto boundary = state.DistanceToSurface(p);
+    auto boundary = state.DistanceToCellBoundary(p);
     ASSERT_DOUBLE_EQ(boundary.distance, distances[i]);
     ASSERT_EQ(boundary.surface, SurfaceID{surfaces[i]});
     p.y += boundary.distance * p.uy;

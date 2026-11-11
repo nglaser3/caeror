@@ -145,6 +145,21 @@ struct CaerorGeometryState {
   };
 
   RAJA_HOST_DEVICE
+  DistanceResult DistanceToCellBoundary(const Particle &p) const {
+    Particle temp = p;
+    double distance = 0.0;
+    while (true) {
+      const auto hit = DistanceToSurface(temp);
+      if (hit.surface == SurfaceID{MAXCaerorIndex}) return hit;
+      temp.x += hit.distance * temp.ux;
+      temp.y += hit.distance * temp.uy;
+      temp.z += hit.distance * temp.uz;
+      distance += hit.distance;
+      if (!InCell(temp, p.cell)) return {distance, hit.surface};
+    }
+  }
+
+  RAJA_HOST_DEVICE
   CellID CrossSurface(const Particle &p, const SurfaceID &s) const {
     const auto stype =
         static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{0}));

@@ -91,24 +91,23 @@ struct CaerorGeometryState {
         stack.Push(!stack.Pop());
         break;
       case RPN_AND: {
-        const bool lhs = stack.Pop();
         const bool rhs = stack.Pop();
+        const bool lhs = stack.Pop();
         stack.Push(lhs && rhs);
         break;
       }
       case RPN_OR: {
-        const bool lhs = stack.Pop();
         const bool rhs = stack.Pop();
+        const bool lhs = stack.Pop();
         stack.Push(lhs || rhs);
         break;
       }
       default:
         const auto &s = SurfaceID{token};
-        SurfaceDataIndex index{0};
-        const auto s_type =
-            static_cast<SurfaceType>(surfaces(s, index++));
-        const auto& sense = DirectionalSense(s_type, p, &surfaces(s, index));
-        stack.Push(sense != SenseResult::Negative);
+        const auto s_type = static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{0}));
+        const auto &sense = DirectionalSense(s_type, p, &surfaces(s, SurfaceDataIndex{1}));
+        if (sense == SenseResult::On) return InCellTangent(p, c);
+        stack.Push(sense == SenseResult::Positive);
         break;
       }
     }
@@ -151,6 +150,9 @@ struct CaerorGeometryState {
       // not actually on a boundary, no cross possible
       return p.cell;
 
+    // if particle is still in the current cell, crossing the surface doesnt do anything
+    if (InCell(p, p.cell)) return p.cell;
+
     // loop over cells attached to the surface
     for (const auto lc : RAJA::range<LocalCellID>(0, surface_num_cells(s))) {
       const auto &c = surface_cells(s, lc);
@@ -191,5 +193,56 @@ struct CaerorGeometryState {
     }
     return false;
   }
+private:
+  /// @brief Evaluate stack if the particle is perfectly tangent to surface
+  RAJA_HOST_DEVICE
+  bool InCellTangent(const Particle &p, const CellID c) const {
+    SenseResult stack_data[MAX_STACK_DEPTH];
+    Stack stack(stack_data);
+    for (const auto t : RAJA::range<RPNTokenIndex>(0, logic_sizes(c))) {
+      const auto &token = logic(c, t);
+      switch (token) {
+      case RPN_NOT: {
+        const auto value = stack.Pop();
+        if (value == SenseResult::Positive) stack.Push(SenseResult::Negative);
+        else if (value == SenseResult::Negative) stack.Push(SenseResult::Positive);
+        else stack.Push(SenseResult::On);
+        break;
+      }
+      case RPN_AND: {
+        const auto rhs = stack.Pop();
+        const auto lhs = stack.Pop();
+        if (lhs == SenseResult::Negative || rhs == SenseResult::Negative)
+          stack.Push(SenseResult::Negative);
+        else if (lhs == SenseResult::On || rhs == SenseResult::On)
+          stack.Push(SenseResult::On);
+        else
+          stack.Push(SenseResult::Positive);
+        break;
+      }
+      case RPN_OR: {
+        const auto rhs = stack.Pop();
+        const auto lhs = stack.Pop();
+        if (lhs == SenseResult::Positive || rhs == SenseResult::Positive)
+          stack.Push(SenseResult::Positive);
+        else if (lhs == SenseResult::On || rhs == SenseResult::On)
+          stack.Push(SenseResult::On);
+        else
+          stack.Push(SenseResult::Negative);
+        break;
+      }
+      default:
+        const auto &s = SurfaceID{token};
+        SurfaceDataIndex index{0};
+        const auto s_type =
+            static_cast<SurfaceType>(surfaces(s, index++));
+        const auto& sense = DirectionalSense(s_type, p, &surfaces(s, index));
+        stack.Push(sense);
+        break;
+      }
+    }
+    const auto result = stack.Pop();
+    return result == SenseResult::On ? c == p.cell : result == SenseResult::Positive;
+  };
 };
 } // namespace caeror

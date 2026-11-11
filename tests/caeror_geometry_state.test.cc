@@ -151,6 +151,25 @@ TEST(CaerorGeometryState, TangentPlaneRetainsCurrentCell) {
   }
 }
 
+TEST(CaerorGeometryState, TangencyDoesNotOverride) {
+  GeometryConstructor input;
+  auto x = input.CreateAxisAlignedPlane(Axis::X, 0.0);
+  auto y = input.CreateAxisAlignedPlane(Axis::Y, 0.0);
+  input.CreateCell(+x && +y, MaterialID{0});
+
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+
+  Particle p{};
+  p.x = 0.0;
+  p.y = -1.0;
+  p.uy = 1.0;
+  p.cell = CellID{0};
+
+  auto result = state.InCell(p, CellID{0});
+  EXPECT_FALSE(result);
+}
+
 TEST(CaerorGeometryState, SlabDistances) {
   auto input = CreateSlabs();
   CaerorGeometry geometry(input);

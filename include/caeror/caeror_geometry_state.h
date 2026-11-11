@@ -107,7 +107,7 @@ struct CaerorGeometryState {
         SurfaceDataIndex index{0};
         const auto s_type =
             static_cast<SurfaceType>(surfaces(s, index++));
-        const auto &sense = Sense(s_type, p, &surfaces(s, index));
+        const auto& sense = DirectionalSense(s_type, p, &surfaces(s, index));
         stack.Push(sense != SenseResult::Negative);
         break;
       }

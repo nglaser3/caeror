@@ -52,4 +52,33 @@ TEST(SurfaceDispatch, AxisAlignedCylinder) {
   const double data[] = {static_cast<double>(Axis::Z), 2.0, 1.0, -1.0};
   CheckDispatch<SurfaceType::AxisAlignedCylinder>(data);
 }
+
+TEST(SurfaceDispatch, DirectionalSense) {
+  const double data[] = {static_cast<double>(Axis::X), 2.0};
+  Particle p{};
+
+  p.x = 1.0;
+  p.ux = 1.0;
+  auto result = DirectionalSense(SurfaceType::AxisAlignedPlane, p, data);
+  EXPECT_EQ(result, SenseResult::Negative);
+
+  p.x = 3.0;
+  p.ux = -1.0;
+  result = DirectionalSense(SurfaceType::AxisAlignedPlane, p, data);
+  EXPECT_EQ(result, SenseResult::Positive);
+
+  p.x = 2.0;
+  p.ux = 1.0;
+  result = DirectionalSense(SurfaceType::AxisAlignedPlane, p, data);
+  EXPECT_EQ(result, SenseResult::Positive);
+
+  p.ux = -1.0;
+  result = DirectionalSense(SurfaceType::AxisAlignedPlane, p, data);
+  EXPECT_EQ(result, SenseResult::Negative);
+
+  p.ux = 0.0;
+  p.uy = 1.0;
+  result = DirectionalSense(SurfaceType::AxisAlignedPlane, p, data);
+  EXPECT_EQ(result, SenseResult::On);
+}
 } // namespace

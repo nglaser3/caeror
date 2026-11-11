@@ -545,4 +545,15 @@ RAJA_HOST_DEVICE inline bool AlignedNormal(SurfaceType stype, const Particle &p,
   return false;
 }
 
+RAJA_HOST_DEVICE inline SenseResult DirectionalSense(
+    SurfaceType stype, const Particle &p, const double *data) {
+  const auto sense = Sense(stype, p, data);
+  if (sense != SenseResult::On) return sense;
+  if (AlignedNormal(stype, p, SenseResult::Positive, data))
+    return SenseResult::Positive;
+  if (AlignedNormal(stype, p, SenseResult::Negative, data))
+    return SenseResult::Negative;
+  return SenseResult::On;
+}
+
 } // namespace caeror

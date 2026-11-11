@@ -78,7 +78,7 @@ TEST(AxisAlignedCylinder, Intersection) {
         for (const auto &c : cases) {
           auto p = MakeParticle(axis, shift + radius * c.r1,
                                 -shift + radius * c.r2, 7.0, c.u1, c.u2, c.ua);
-          auto result = Intersection<SurfaceType::AxisAlignedCylinder>(p, data);
+          auto result = Intersection<SurfaceType::AxisAlignedCylinder, false>(p, data);
           EXPECT_EQ(result.valid_, c.valid);
           EXPECT_DOUBLE_EQ(result.distance_, radius * c.distance);
         }
@@ -87,13 +87,23 @@ TEST(AxisAlignedCylinder, Intersection) {
   }
 }
 
+TEST(AxisAlignedCylinder, SkipZeroFindsFarRoot) {
+  const double data[] = {static_cast<double>(Axis::Z), 2.0, 0.0, 0.0};
+  Particle p{};
+  p.x = -2.0;
+  p.ux = 1.0;
+  auto result = Intersection<SurfaceType::AxisAlignedCylinder, true>(p, data);
+  EXPECT_TRUE(result.valid_);
+  EXPECT_DOUBLE_EQ(result.distance_, 4.0);
+}
+
 TEST(AxisAlignedCylinder, ParallelIntersection) {
   for (Axis axis : {Axis::X, Axis::Y, Axis::Z}) {
     const double data[] = {static_cast<double>(axis), 1.0, 0.0, 0.0};
     for (double radius : {0.0, 1.0, 2.0}) {
       for (double direction : {-1.0, 1.0}) {
         auto p = MakeParticle(axis, radius, 0, 0, 0, 0, direction);
-        auto result = Intersection<SurfaceType::AxisAlignedCylinder>(p, data);
+        auto result = Intersection<SurfaceType::AxisAlignedCylinder, false>(p, data);
         EXPECT_FALSE(result.valid_);
         // Distance is not used when valid_ is false.
       }

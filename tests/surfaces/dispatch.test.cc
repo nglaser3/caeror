@@ -18,8 +18,8 @@ void CheckDispatch(const double *data) {
       auto expected_sense = Sense<Type>(p, data);
       EXPECT_EQ(sense, expected_sense);
 
-      auto hit = Intersection(Type, p, data);
-      auto expected_hit = Intersection<Type>(p, data);
+      auto hit = Intersection<false>(Type, p, data);
+      auto expected_hit = Intersection<Type, false>(p, data);
       EXPECT_EQ(hit.valid_, expected_hit.valid_);
       EXPECT_DOUBLE_EQ(hit.distance_, expected_hit.distance_);
 

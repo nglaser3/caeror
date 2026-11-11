@@ -283,21 +283,6 @@ TEST(CaerorGeometryState, ObliquePlaneDistance) {
   EXPECT_EQ(result.surface, plane.id_);
 }
 
-TEST(CaerorGeometryState, SphereEntranceFindsFarRoot) {
-  GeometryConstructor input;
-  auto sphere = input.CreateSphere(2.0, 0.0, 0.0, 0.0);
-  input.CreateCell(-sphere, MaterialID{0});
-  CaerorGeometry geometry(input);
-  auto state = geometry.GetState<RAJA::resources::Host>();
-  Particle p{};
-  p.x = -2.0;
-  p.ux = 1.0;
-  p.cell = CellID{0};
-  auto result = state.DistanceToSurface(p);
-  EXPECT_DOUBLE_EQ(result.distance, 4.0);
-  EXPECT_EQ(result.surface, sphere.id_);
-}
-
 TEST(CaerorGeometryState, TangentSphereIsNotACrossing) {
   GeometryConstructor input;
   auto sphere = input.CreateSphere(1.0, 0.0, 0.0, 0.0);

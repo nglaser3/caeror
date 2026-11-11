@@ -52,7 +52,7 @@ TEST(Plane, Intersection) {
       Particle p{};
       p.x = c.x; p.y = c.y; p.z = c.z;
       p.ux = c.ux; p.uy = c.uy; p.uz = c.uz;
-      auto result = Intersection<SurfaceType::Plane>(p, data);
+      auto result = Intersection<SurfaceType::Plane, false>(p, data);
       EXPECT_EQ(result.valid_, c.valid);
       EXPECT_DOUBLE_EQ(result.distance_, c.distance);
     }
@@ -67,7 +67,7 @@ TEST(Plane, ParallelIntersection) {
     p.x = x;
     p.ux = std::sqrt(0.5);
     p.uy = -p.ux;
-    auto result = Intersection<SurfaceType::Plane>(p, data);
+    auto result = Intersection<SurfaceType::Plane, false>(p, data);
     EXPECT_FALSE(result.valid_);
     EXPECT_EQ(result.distance_, INF);
   }

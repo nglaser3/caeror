@@ -61,12 +61,32 @@ TEST(Sphere, Intersection) {
         p.y = -shift + radius * c.y;
         p.z = 2.0 * shift + radius * c.z;
         p.ux = c.ux; p.uy = c.uy; p.uz = c.uz;
-        auto result = Intersection<SurfaceType::Sphere>(p, data);
+        auto result = Intersection<SurfaceType::Sphere, false>(p, data);
         EXPECT_EQ(result.valid_, c.valid);
         EXPECT_DOUBLE_EQ(result.distance_, radius * c.distance);
       }
     }
   }
+}
+
+TEST(Sphere, SkipZeroFindsFarRoot) {
+  const double data[] = {2.0, 0.0, 0.0, 0.0};
+  Particle p{};
+  p.x = -2.0;
+  p.ux = 1.0;
+  auto result = Intersection<SurfaceType::Sphere, true>(p, data);
+  EXPECT_TRUE(result.valid_);
+  EXPECT_DOUBLE_EQ(result.distance_, 4.0);
+}
+
+TEST(Sphere, ExitReportsZeroDistance) {
+  const double data[] = {2.0, 0.0, 0.0, 0.0};
+  Particle p{};
+  p.x = 2.0;
+  p.ux = 1.0;
+  auto result = Intersection<SurfaceType::Sphere, false>(p, data);
+  EXPECT_TRUE(result.valid_);
+  EXPECT_DOUBLE_EQ(result.distance_, 0.0);
 }
 
 TEST(Sphere, AlignedNormal) {

@@ -71,7 +71,7 @@ struct Surface : public SurfaceBase {
 template <SurfaceType Type>
 RAJA_HOST_DEVICE SenseResult Sense(const Particle &p, const double *data);
 
-template <SurfaceType Type>
+template <SurfaceType Type, bool SkipZero>
 RAJA_HOST_DEVICE IntersectionResult Intersection(const Particle &p,
                                                  const double *data);
 
@@ -110,9 +110,10 @@ RAJA_HOST_DEVICE inline SenseResult Sense<SurfaceType::Plane>(const Particle &p,
   return SenseResult::On;
 }
 
-template <>
+template <SurfaceType Type, bool SkipZero>
+  requires(Type == SurfaceType::Plane)
 RAJA_HOST_DEVICE inline IntersectionResult
-Intersection<SurfaceType::Plane>(const Particle &p, const double *data) {
+Intersection(const Particle &p, const double *data) {
   const double a = data[static_cast<int>(PlaneData::A)];
   const double b = data[static_cast<int>(PlaneData::B)];
   const double c = data[static_cast<int>(PlaneData::C)];
@@ -125,7 +126,7 @@ Intersection<SurfaceType::Plane>(const Particle &p, const double *data) {
 
   const double dist = -(a * p.x + b * p.y + c * p.z + d0) / denom;
 
-  if (dist < 0.0)
+  if (dist < 0.0 || (SkipZero && dist == 0.0))
     return {INFINITY, false};
 
   return {dist, true};
@@ -195,9 +196,10 @@ Sense<SurfaceType::AxisAlignedPlane>(const Particle &p, const double *data) {
   return SenseResult::On;
 }
 
-template <>
-RAJA_HOST_DEVICE inline IntersectionResult Intersection<SurfaceType::AxisAlignedPlane>(
-    const Particle &p, const double *data) {
+template <SurfaceType Type, bool SkipZero>
+  requires(Type == SurfaceType::AxisAlignedPlane)
+RAJA_HOST_DEVICE inline IntersectionResult
+Intersection(const Particle &p, const double *data) {
   const Axis axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
   const double intercept =
@@ -225,7 +227,7 @@ RAJA_HOST_DEVICE inline IntersectionResult Intersection<SurfaceType::AxisAligned
 
   const double distance = (intercept - pos) / dir;
 
-  if (distance < 0.0)
+  if (distance < 0.0 || (SkipZero && distance == 0.0))
     return {INFINITY, false};
 
   return {distance, true};
@@ -312,10 +314,10 @@ Sense<SurfaceType::AxisAlignedCylinder>(const Particle &p, const double *data) {
   return SenseResult::On;
 }
 
-template <>
+template <SurfaceType Type, bool SkipZero>
+  requires(Type == SurfaceType::AxisAlignedCylinder)
 RAJA_HOST_DEVICE inline IntersectionResult
-Intersection<SurfaceType::AxisAlignedCylinder>(const Particle &p,
-                                               const double *data) {
+Intersection(const Particle &p, const double *data) {
   const auto axis =
       static_cast<Axis>(data[static_cast<int>(AxisAlignedCylinderData::Axis)]);
   const auto radius = data[static_cast<int>(AxisAlignedCylinderData::Radius)];
@@ -358,10 +360,10 @@ Intersection<SurfaceType::AxisAlignedCylinder>(const Particle &p,
     return {INFINITY, false};
 
   const double root1 = (-b - sqrt(disc)) / (2.0 * a);
-  if (root1 >= 0.0)
+  if (root1 >= 0.0 && (!SkipZero || root1 != 0.0))
     return {root1, true};
   const double root2 = (-b + sqrt(disc)) / (2.0 * a);
-  if (root2 >= 0.0)
+  if (root2 >= 0.0 && (!SkipZero || root2 != 0.0))
     return {root2, true};
 
   return {INFINITY, false};
@@ -434,9 +436,10 @@ RAJA_HOST_DEVICE inline SenseResult Sense<SurfaceType::Sphere>(const Particle &p
   return SenseResult::On;
 }
 
-template <>
+template <SurfaceType Type, bool SkipZero>
+  requires(Type == SurfaceType::Sphere)
 RAJA_HOST_DEVICE inline IntersectionResult
-Intersection<SurfaceType::Sphere>(const Particle &p, const double *data) {
+Intersection(const Particle &p, const double *data) {
   const double radius = data[static_cast<int>(SphereData::Radius)];
   const double xc = data[static_cast<int>(SphereData::XCenter)];
   const double yc = data[static_cast<int>(SphereData::YCenter)];
@@ -454,10 +457,10 @@ Intersection<SurfaceType::Sphere>(const Particle &p, const double *data) {
     return {INFINITY, false};
 
   const double root1 = -b - sqrt(disc);
-  if (root1 >= 0.0)
+  if (root1 >= 0.0 && (!SkipZero || root1 != 0.0))
     return {root1, true};
   const double root2 = -b + sqrt(disc);
-  if (root2 >= 0.0)
+  if (root2 >= 0.0 && (!SkipZero || root2 != 0.0))
     return {root2, true};
   return {INFINITY, false};
 }
@@ -513,18 +516,19 @@ inline SenseResult Sense(SurfaceType stype, const Particle &p, const double *dat
   return SenseResult::On;
 }
 
+template <bool SkipZero>
 RAJA_HOST_DEVICE
 inline IntersectionResult Intersection(SurfaceType stype, const Particle &p,
-                                const double *data) {
+                                       const double *data) {
   switch (stype) {
   case SurfaceType::Plane:
-    return Intersection<SurfaceType::Plane>(p, data);
+    return Intersection<SurfaceType::Plane, SkipZero>(p, data);
   case SurfaceType::AxisAlignedPlane:
-    return Intersection<SurfaceType::AxisAlignedPlane>(p, data);
+    return Intersection<SurfaceType::AxisAlignedPlane, SkipZero>(p, data);
   case SurfaceType::AxisAlignedCylinder:
-    return Intersection<SurfaceType::AxisAlignedCylinder>(p, data);
+    return Intersection<SurfaceType::AxisAlignedCylinder, SkipZero>(p, data);
   case SurfaceType::Sphere:
-    return Intersection<SurfaceType::Sphere>(p, data);
+    return Intersection<SurfaceType::Sphere, SkipZero>(p, data);
   }
   return {INFINITY, false};
 }

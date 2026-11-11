@@ -131,7 +131,9 @@ struct CaerorGeometryState {
         SurfaceDataIndex index{0};
         const auto s_type =
             static_cast<SurfaceType>(surfaces(s, index++));
-        const auto &result = Intersection(s_type, p, &surfaces(s, index));
+        auto result = Intersection<false>(s_type, p, &surfaces(s, index));
+        if (result.valid_ && result.distance_ == 0.0 && InCell(p, c))
+          result = Intersection<true>(s_type, p, &surfaces(s, index));
         if (result.valid_ && result.distance_ < min_distance) {
           surf = s;
           min_distance = result.distance_;

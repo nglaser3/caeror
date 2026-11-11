@@ -81,7 +81,7 @@ TEST(AxisAlignedPlane, Intersection) {
       const double data[] = {static_cast<double>(axis), intercept};
       for (const auto &c : cases) {
         const auto p = MakeParticle(axis, intercept + c.offset, c.direction);
-        const auto result = Intersection<SurfaceType::AxisAlignedPlane>(p, data);
+        const auto result = Intersection<SurfaceType::AxisAlignedPlane, false>(p, data);
         EXPECT_EQ(result.valid_, c.valid);
         EXPECT_DOUBLE_EQ(result.distance_, c.distance);
       }
@@ -99,7 +99,7 @@ TEST(AxisAlignedPlane, IgnoresTransverseCoordinates) {
 
     auto sense = Sense<SurfaceType::AxisAlignedPlane>(p, data);
     EXPECT_EQ(sense, SenseResult::Negative);
-    const auto result = Intersection<SurfaceType::AxisAlignedPlane>(p, data);
+    const auto result = Intersection<SurfaceType::AxisAlignedPlane, false>(p, data);
     EXPECT_TRUE(result.valid_);
     EXPECT_DOUBLE_EQ(result.distance_, 3.0);
     auto aligned = AlignedNormal<SurfaceType::AxisAlignedPlane>(

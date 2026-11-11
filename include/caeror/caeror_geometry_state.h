@@ -104,8 +104,8 @@ struct CaerorGeometryState {
       }
       default:
         const auto &s = SurfaceID{token};
-        const auto s_type = static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{0}));
-        const auto &sense = DirectionalSense(s_type, p, &surfaces(s, SurfaceDataIndex{1}));
+        const auto s_type = static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{SURFACE_TYPE_INDEX}));
+        const auto &sense = DirectionalSense(s_type, p, &surfaces(s, SurfaceDataIndex{SURFACE_DATA_OFFSET}));
         if (sense == SenseResult::On) return InCellTangent(p, c);
         stack.Push(sense == SenseResult::Positive);
         break;
@@ -128,9 +128,9 @@ struct CaerorGeometryState {
         break;
       default:
         const auto &s = SurfaceID{token};
-        SurfaceDataIndex index{0};
+        const SurfaceDataIndex index{SURFACE_DATA_OFFSET};
         const auto s_type =
-            static_cast<SurfaceType>(surfaces(s, index++));
+            static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{SURFACE_TYPE_INDEX}));
         auto result = Intersection<false>(s_type, p, &surfaces(s, index));
         if (result.valid_ && result.distance_ == 0.0 && InCell(p, c))
           result = Intersection<true>(s_type, p, &surfaces(s, index));
@@ -162,8 +162,8 @@ struct CaerorGeometryState {
   RAJA_HOST_DEVICE
   CellID CrossSurface(const Particle &p, const SurfaceID &s) const {
     const auto stype =
-        static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{0}));
-    if (SenseResult::On != Sense(stype, p, &surfaces(s, SurfaceDataIndex{1})))
+        static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{SURFACE_TYPE_INDEX}));
+    if (SenseResult::On != Sense(stype, p, &surfaces(s, SurfaceDataIndex{SURFACE_DATA_OFFSET})))
       // not actually on a boundary, no cross possible
       return p.cell;
 
@@ -219,9 +219,9 @@ private:
       }
       default:
         const auto &s = SurfaceID{token};
-        SurfaceDataIndex index{0};
+        const SurfaceDataIndex index{SURFACE_DATA_OFFSET};
         const auto s_type =
-            static_cast<SurfaceType>(surfaces(s, index++));
+            static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{SURFACE_TYPE_INDEX}));
         const auto& sense = DirectionalSense(s_type, p, &surfaces(s, index));
         stack.Push(sense);
         break;

@@ -47,6 +47,11 @@ enum class SurfaceType {
   Sphere,
 };
 
+// Packed surface header, followed by the geometric parameters.
+inline constexpr size_t SURFACE_TYPE_INDEX = 0;
+inline constexpr size_t SURFACE_BC_INDEX = 1;
+inline constexpr size_t SURFACE_DATA_OFFSET = 2;
+
 template <SurfaceType Type> struct SurfaceTraits;
 
 struct SurfaceBase {
@@ -73,7 +78,7 @@ struct Surface : public SurfaceBase {
   static constexpr SurfaceType surface_type_ = Type;
 
   /// @brief Data requirements
-  static constexpr size_t data_size_ = sizeof...(DataTypes) + 2;
+  static constexpr size_t data_size_ = sizeof...(DataTypes) + SURFACE_DATA_OFFSET;
 
   /// @brief Data used to define the surface
   camp::tuple<DataTypes...> data_;

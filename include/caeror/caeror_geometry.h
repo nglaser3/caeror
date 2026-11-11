@@ -73,9 +73,10 @@ public:
     for (size_t surf_id = 0; surf_id < surface_types.size(); surf_id++) {
       auto stype = surface_types[surf_id];
       auto offset = max_surf_data_size_ * surf_id;
-      surfaces_data_[offset] = static_cast<double>(stype);
+      surfaces_data_[offset + SURFACE_TYPE_INDEX] = static_cast<double>(stype);
 
       const auto &surf = *surfaces[surf_id];
+      surfaces_data_[offset + SURFACE_BC_INDEX] = static_cast<double>(surf.bc_);
       switch (stype) {
       case SurfaceType::Plane: {
         FillSurfaceData<SurfaceType::Plane, PlaneData::A>(surf, offset);
@@ -117,7 +118,7 @@ public:
   void FillSurfaceData(const SurfaceBase &s, size_t offset) {
     const auto &surface = CastSurface<Type>(s);
     constexpr size_t index = static_cast<size_t>(Index);
-    surfaces_data_[offset + 1 + index] =
+    surfaces_data_[offset + SURFACE_DATA_OFFSET + index] =
         static_cast<double>(camp::get<index>(surface.data_));
   }
 

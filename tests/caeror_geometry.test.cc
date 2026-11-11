@@ -24,9 +24,11 @@ TEST(CaerorGeometry, KobayashiSurfaces) {
     const SurfaceID id{i};
     auto type = state.surfaces(id, SurfaceDataIndex{0});
     EXPECT_EQ(type, static_cast<double>(SurfaceType::AxisAlignedPlane));
-    auto axis = state.surfaces(id, SurfaceDataIndex{1});
+    auto bc = state.surfaces(id, SurfaceDataIndex{1});
+    EXPECT_EQ(bc, static_cast<double>(BoundaryCondition::Transmission));
+    auto axis = state.surfaces(id, SurfaceDataIndex{2});
     EXPECT_EQ(axis, static_cast<double>(i / 5)); // kinda hacky, but x was made first then y then z lol
-    auto intercept = state.surfaces(id, SurfaceDataIndex{2});
+    auto intercept = state.surfaces(id, SurfaceDataIndex{3});
     EXPECT_DOUBLE_EQ(intercept, intercepts[i]);
   }
 }

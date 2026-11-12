@@ -1,0 +1,31 @@
+name: clang-format
+
+on:
+  push:
+    paths:
+      - 'include/**'
+      - 'src/**'
+      - 'tests/**'
+  pull_request:
+    paths:
+      - 'include/**'
+      - 'src/**'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  formatting:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        path: [include, src, tests]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check formatting
+        uses: jidicula/clang-format-action@v4.18.0
+        with:
+          clang-format-version: '21'
+          check-path: ${{ matrix.path }}

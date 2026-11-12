@@ -21,12 +21,16 @@ TEST(CaerorGeometry, KobayashiSurfaces) {
   ASSERT_EQ(state.surfaces.get_layout().get_dim_size<1>(), 4);
   const double intercepts[] = {0,  10,  30, 40, 60, 0,  10, 50,
                                60, 100, 0,  10, 30, 40, 60};
+  const BoundaryCondition boundary_conditions[] = {
+      BoundaryCondition::Reflective, BoundaryCondition::Transmission,
+      BoundaryCondition::Transmission, BoundaryCondition::Transmission,
+      BoundaryCondition::Vacuum};
   for (CaerorIndexType i = 0; i < 15; ++i) {
     const SurfaceID id{i};
     auto type = state.surfaces(id, SurfaceDataIndex{0});
     EXPECT_EQ(type, static_cast<double>(SurfaceType::AxisAlignedPlane));
     auto bc = state.surfaces(id, SurfaceDataIndex{1});
-    EXPECT_EQ(bc, static_cast<double>(BoundaryCondition::Transmission));
+    EXPECT_EQ(bc, static_cast<double>(boundary_conditions[i % 5]));
     auto axis = state.surfaces(id, SurfaceDataIndex{2});
     EXPECT_EQ(
         axis,

@@ -1,6 +1,7 @@
 # Caeror
 
 [![Build and test](https://github.com/scram-lab/caeror/actions/workflows/build-test.yml/badge.svg)](https://github.com/scram-lab/caeror/actions/workflows/build-test.yml)
+[![Documentation](https://github.com/scram-lab/caeror/actions/workflows/docs.yml/badge.svg)](https://scram-lab.github.io/caeror/)
 
 ## Overview
 

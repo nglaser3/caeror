@@ -8,4 +8,4 @@ struct Particle {
 
   CellID cell;
 };
-} // namespace caeror
+}  // namespace caeror

@@ -6,7 +6,7 @@ namespace {
 using namespace caeror;
 
 template <SurfaceType Type>
-void CheckDispatch(const double *data) {
+void CheckDispatch(const double* data) {
   for (double position : {-3.0, 0.0, 1.0, 3.0}) {
     for (double direction : {-1.0, 0.0, 1.0}) {
       Particle p{};
@@ -23,8 +23,8 @@ void CheckDispatch(const double *data) {
       EXPECT_EQ(hit.valid_, expected_hit.valid_);
       EXPECT_DOUBLE_EQ(hit.distance_, expected_hit.distance_);
 
-      for (auto side : {SenseResult::Negative, SenseResult::On,
-                        SenseResult::Positive}) {
+      for (auto side :
+           {SenseResult::Negative, SenseResult::On, SenseResult::Positive}) {
         auto aligned = AlignedNormal(Type, p, side, data);
         auto expected_aligned = AlignedNormal<Type>(p, side, data);
         EXPECT_EQ(aligned, expected_aligned);
@@ -81,4 +81,4 @@ TEST(SurfaceDispatch, DirectionalSense) {
   result = DirectionalSense(SurfaceType::AxisAlignedPlane, p, data);
   EXPECT_EQ(result, SenseResult::On);
 }
-} // namespace
+}  // namespace

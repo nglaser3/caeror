@@ -1,10 +1,11 @@
-#include <algorithm>
-#include <vector>
-#include <type_traits>
+#include "caeror/caeror_geometry.h"
 
 #include <gtest/gtest.h>
 
-#include "caeror/caeror_geometry.h"
+#include <algorithm>
+#include <type_traits>
+#include <vector>
+
 #include "caeror/caeror_geometry_state.h"
 #include "sample_constructors/kobayashi.h"
 
@@ -18,8 +19,8 @@ TEST(CaerorGeometry, KobayashiSurfaces) {
 
   ASSERT_EQ(state.surfaces.get_layout().get_dim_size<0>(), 15);
   ASSERT_EQ(state.surfaces.get_layout().get_dim_size<1>(), 4);
-  const double intercepts[] = {
-      0, 10, 30, 40, 60, 0, 10, 50, 60, 100, 0, 10, 30, 40, 60};
+  const double intercepts[] = {0,  10,  30, 40, 60, 0,  10, 50,
+                               60, 100, 0,  10, 30, 40, 60};
   for (CaerorIndexType i = 0; i < 15; ++i) {
     const SurfaceID id{i};
     auto type = state.surfaces(id, SurfaceDataIndex{0});
@@ -27,7 +28,10 @@ TEST(CaerorGeometry, KobayashiSurfaces) {
     auto bc = state.surfaces(id, SurfaceDataIndex{1});
     EXPECT_EQ(bc, static_cast<double>(BoundaryCondition::Transmission));
     auto axis = state.surfaces(id, SurfaceDataIndex{2});
-    EXPECT_EQ(axis, static_cast<double>(i / 5)); // kinda hacky, but x was made first then y then z lol
+    EXPECT_EQ(
+        axis,
+        static_cast<double>(
+            i / 5));  // kinda hacky, but x was made first then y then z lol
     auto intercept = state.surfaces(id, SurfaceDataIndex{3});
     EXPECT_DOUBLE_EQ(intercept, intercepts[i]);
   }
@@ -47,7 +51,7 @@ TEST(CaerorGeometry, KobayashiCellLogic) {
     const CellID id{i};
     auto size = state.logic_sizes(id);
     ASSERT_EQ(size, lengths[i]);
-    const auto &expected = input.GetCells()[i]->region_.logic_;
+    const auto& expected = input.GetCells()[i]->region_.logic_;
     ASSERT_EQ(size, expected.size());
     for (CaerorIndexType j = 0; j < size; ++j) {
       auto token = state.logic(id, RPNTokenIndex{j});
@@ -88,22 +92,9 @@ TEST(CaerorGeometry, KobayashiSurfaceCells) {
   ASSERT_EQ(state.surface_cells.get_layout().get_dim_size<0>(), 15u);
   ASSERT_EQ(state.surface_num_cells.get_layout().get_dim_size<0>(), 15u);
   const std::vector<CaerorIndexType> expected[] = {
-      {0, 1, 2},
-      {0, 1, 2},
-      {0, 1},
-      {0, 1}, 
-      {0},
-      {0, 2},
-      {0, 1, 2},
-      {0, 1},
-      {0, 1},
-      {0, 1},
-      {0, 1, 2},
-      {0, 1, 2},
-      {0, 1},
-      {0, 1},
-      {0}
-    };
+      {0, 1, 2}, {0, 1, 2}, {0, 1}, {0, 1}, {0},
+      {0, 2},    {0, 1, 2}, {0, 1}, {0, 1}, {0, 1},
+      {0, 1, 2}, {0, 1, 2}, {0, 1}, {0, 1}, {0}};
   for (CaerorIndexType i = 0; i < 15; ++i) {
     const SurfaceID id{i};
     auto size = state.surface_num_cells(id);
@@ -140,24 +131,26 @@ TEST(CaerorGeometry, GeometryOutlivesInput) {
   EXPECT_EQ(state.material_fills(CellID{1}), MaterialID{1});
 }
 
-// Helper struct for faking a resource, used to count allocations to verify geometry owns their lifetime.
+// Helper struct for faking a resource, used to count allocations to verify
+// geometry owns their lifetime.
 struct CountingHostResource {
   inline static int allocations = 0;
   RAJA::resources::Host host;
 
-  template <typename T> T *allocate(size_t count) {
-    auto *pointer = host.allocate<T>(count);
+  template <typename T>
+  T* allocate(size_t count) {
+    auto* pointer = host.allocate<T>(count);
     ++allocations;
     return pointer;
   }
-  void deallocate(void *pointer) {
+  void deallocate(void* pointer) {
     host.deallocate(pointer);
     --allocations;
   }
-  void memcpy(void *destination, const void *source, size_t bytes) {
+  void memcpy(void* destination, const void* source, size_t bytes) {
     host.memcpy(destination, source, bytes);
   }
-  void wait() {host.wait();}
+  void wait() { host.wait(); }
 };
 
 TEST(CaerorGeometry, GeometryReleasesAllocations) {
@@ -182,7 +175,6 @@ TEST(CaerorGeometry, AdditionalStatesDontCorrupt) {
     EXPECT_EQ(material, MaterialID{2});
     material = second.material_fills(CellID{2});
     EXPECT_EQ(material, MaterialID{2});
-
   }
   EXPECT_EQ(CountingHostResource::allocations, 0);
 }
@@ -206,12 +198,14 @@ TEST(CaerorGeometry, CaptureStateInKernel) {
   CaerorGeometry geometry(input);
   auto state = geometry.GetState<RAJA::resources::Host>();
   CaerorIndexType output[3]{};
-  auto *results = output;
-  RAJA::forall<RAJA::seq_exec>(RAJA::RangeSegment(0, 3), [=](RAJA::Index_type i) {
-    auto local = state;
-    results[i] = *local.material_fills(CellID{static_cast<CaerorIndexType>(i)});
-    results[i] += *state.universe_cells(UniverseID{0}, LocalCellID{0});
-  });
+  auto* results = output;
+  RAJA::forall<RAJA::seq_exec>(
+      RAJA::RangeSegment(0, 3), [=](RAJA::Index_type i) {
+        auto local = state;
+        results[i] =
+            *local.material_fills(CellID{static_cast<CaerorIndexType>(i)});
+        results[i] += *state.universe_cells(UniverseID{0}, LocalCellID{0});
+      });
   for (CaerorIndexType i = 0; i < 3; ++i) EXPECT_EQ(output[i], i);
 }
-} // namespace
+}  // namespace

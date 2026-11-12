@@ -1,8 +1,8 @@
-#include <vector>
+#include "caeror/geometry_constructor.h"
 
 #include <gtest/gtest.h>
 
-#include "caeror/geometry_constructor.h"
+#include <vector>
 
 namespace {
 using namespace caeror;
@@ -36,19 +36,20 @@ TEST(GeometryConstructor, MixedSurfaces) {
   EXPECT_DOUBLE_EQ(camp::get<2>(sphere.data_), -8.0);
   EXPECT_DOUBLE_EQ(camp::get<3>(sphere.data_), 9.0);
 
-  const auto cylinder = geometry.CreateAxisAlignedCylinder(Axis::Z, 10.0, -11.0, 12.0);
+  const auto cylinder =
+      geometry.CreateAxisAlignedCylinder(Axis::Z, 10.0, -11.0, 12.0);
   EXPECT_EQ(cylinder.id_, SurfaceID{3});
   EXPECT_EQ(camp::get<0>(cylinder.data_), Axis::Z);
   EXPECT_DOUBLE_EQ(camp::get<1>(cylinder.data_), 10.0);
   EXPECT_DOUBLE_EQ(camp::get<2>(cylinder.data_), -11.0);
   EXPECT_DOUBLE_EQ(camp::get<3>(cylinder.data_), 12.0);
 
-  const auto &surfaces = geometry.GetSurfaces();
+  const auto& surfaces = geometry.GetSurfaces();
   ASSERT_EQ(surfaces.size(), 4);
 
   const std::vector<SurfaceType> expected_types = {
-      SurfaceType::Plane, SurfaceType::AxisAlignedPlane,
-      SurfaceType::Sphere, SurfaceType::AxisAlignedCylinder};
+      SurfaceType::Plane, SurfaceType::AxisAlignedPlane, SurfaceType::Sphere,
+      SurfaceType::AxisAlignedCylinder};
   EXPECT_EQ(geometry.GetSurfaceTypes(), expected_types);
 
   for (size_t i = 0; i < surfaces.size(); ++i) {
@@ -59,15 +60,19 @@ TEST(GeometryConstructor, MixedSurfaces) {
 
 TEST(GeometryConstructor, SurfaceBoundaryConditions) {
   GeometryConstructor geometry;
-  auto plane = geometry.CreatePlane(1.0, 0.0, 0.0, 0.0, BoundaryCondition::Vacuum);
-  auto aligned = geometry.CreateAxisAlignedPlane(Axis::X, 0.0, BoundaryCondition::Vacuum);
-  auto sphere = geometry.CreateSphere(2.0, 0.0, 0.0, 0.0, BoundaryCondition::Vacuum);
-  auto cylinder = geometry.CreateAxisAlignedCylinder(Axis::Z, 2.0, 0.0, 0.0, BoundaryCondition::Vacuum);
+  auto plane =
+      geometry.CreatePlane(1.0, 0.0, 0.0, 0.0, BoundaryCondition::Vacuum);
+  auto aligned =
+      geometry.CreateAxisAlignedPlane(Axis::X, 0.0, BoundaryCondition::Vacuum);
+  auto sphere =
+      geometry.CreateSphere(2.0, 0.0, 0.0, 0.0, BoundaryCondition::Vacuum);
+  auto cylinder = geometry.CreateAxisAlignedCylinder(Axis::Z, 2.0, 0.0, 0.0,
+                                                     BoundaryCondition::Vacuum);
   EXPECT_EQ(plane.bc_, BoundaryCondition::Vacuum);
   EXPECT_EQ(aligned.bc_, BoundaryCondition::Vacuum);
   EXPECT_EQ(sphere.bc_, BoundaryCondition::Vacuum);
   EXPECT_EQ(cylinder.bc_, BoundaryCondition::Vacuum);
-  for (const auto &surface : geometry.GetSurfaces())
+  for (const auto& surface : geometry.GetSurfaces())
     EXPECT_EQ(surface->bc_, BoundaryCondition::Vacuum);
 
   EXPECT_EQ(plane.data_size_, 6);
@@ -86,7 +91,7 @@ TEST(GeometryConstructor, MaterialCells) {
   const auto first = geometry.CreateCell(region, MaterialID{0});
   const auto second = geometry.CreateCell(!region, MaterialID{1});
 
-  const auto &cells = geometry.GetCells();
+  const auto& cells = geometry.GetCells();
   ASSERT_EQ(cells.size(), 2);
   ASSERT_NE(cells[0], nullptr);
   ASSERT_NE(cells[1], nullptr);
@@ -118,7 +123,7 @@ TEST(GeometryConstructor, UniversesAndUniverseFill) {
   const auto parent_cell = geometry.CreateCell(+plane, universe);
   const auto root_universe = geometry.CreateUniverse({parent_cell});
 
-  const auto &universes = geometry.GetUniverses();
+  const auto& universes = geometry.GetUniverses();
   ASSERT_EQ(universes.size(), 2);
   ASSERT_NE(universes[0], nullptr);
   ASSERT_NE(universes[1], nullptr);
@@ -133,7 +138,7 @@ TEST(GeometryConstructor, UniversesAndUniverseFill) {
   EXPECT_EQ(root_universe.cells_, expected_outer);
   EXPECT_EQ(universes[1]->cells_, expected_outer);
 
-  const auto &cells = geometry.GetCells();
+  const auto& cells = geometry.GetCells();
   ASSERT_EQ(cells.size(), 3);
   const std::vector<RPNToken> expected_region = {0};
   EXPECT_EQ(parent_cell.id_, CellID{2});
@@ -148,4 +153,4 @@ TEST(GeometryConstructor, UniversesAndUniverseFill) {
   EXPECT_EQ(cells[1]->universe_fill_, UniverseID{MAXCaerorIndex});
 }
 
-} // namespace
+}  // namespace

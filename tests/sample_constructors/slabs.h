@@ -16,4 +16,4 @@ inline GeometryConstructor CreateSlabs() {
   return input;
 }
 
-} // namespace caeror
+}  // namespace caeror

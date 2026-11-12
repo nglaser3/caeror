@@ -1,8 +1,7 @@
 #pragma once
 
-#include <cstddef>
-
 #include <RAJA/RAJA.hpp>
+#include <cstddef>
 
 #include "caeror/raja_layouts.h"
 
@@ -10,10 +9,11 @@ namespace caeror {
 
 constexpr size_t MAX_STACK_DEPTH = 16;
 
-template <typename DataType> class Stack {
-public:
+template <typename DataType>
+class Stack {
+ public:
   RAJA_HOST_DEVICE
-  Stack(DataType *data) : eval_stack_(data), size_() {}
+  Stack(DataType* data) : eval_stack_(data), size_() {}
 
   RAJA_HOST_DEVICE
   void Push(DataType value) { eval_stack_[size_++] = value; }
@@ -27,8 +27,8 @@ public:
   RAJA_HOST_DEVICE
   bool Empty() const { return size_ == 0; }
 
-private:
-  DataType *eval_stack_;
+ private:
+  DataType* eval_stack_;
   CaerorIndexType size_;
 };
-} // namespace caeror
+}  // namespace caeror

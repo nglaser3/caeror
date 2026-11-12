@@ -86,7 +86,8 @@ TEST(CaerorGeometryState, NestedBoolean) {
   p.x = 1.0;
   p.y = -1.0;
   p.z = -1.0;
-  // Inside +x, so the union must be true even though both other sides are false.
+  // Inside +x, so the union must be true even though both other sides are
+  // false.
   auto result = state.InCell(p, CellID{0});
   EXPECT_TRUE(result);
 }
@@ -389,7 +390,8 @@ TEST(CaerorGeometryState, TransmissionWithoutNeighborLeaks) {
 
 TEST(CaerorGeometryState, VacuumExitLeaks) {
   GeometryConstructor input;
-  auto wall = input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
+  auto wall =
+      input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
   input.CreateCell(-wall, MaterialID{0});
   CaerorGeometry geometry(input);
   auto state = geometry.GetState<RAJA::resources::Host>();
@@ -404,7 +406,8 @@ TEST(CaerorGeometryState, VacuumExitLeaks) {
 
 TEST(CaerorGeometryState, VacuumRequiresExit) {
   GeometryConstructor input;
-  auto wall = input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
+  auto wall =
+      input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
   input.CreateCell(-wall, MaterialID{0});
   CaerorGeometry geometry(input);
   auto state = geometry.GetState<RAJA::resources::Host>();
@@ -431,7 +434,8 @@ TEST(CaerorGeometryState, VacuumRequiresExit) {
 
 TEST(CaerorGeometryState, VacuumWithNeighborTransmits) {
   GeometryConstructor input;
-  auto wall = input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
+  auto wall =
+      input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
   input.CreateCell(-wall, MaterialID{0});
   input.CreateCell(+wall, MaterialID{1});
   CaerorGeometry geometry(input);
@@ -508,10 +512,11 @@ TEST(CaerorGeometryState, KobayashiMembership) {
   auto input = CreateKobayashi();
   CaerorGeometry geometry(input);
   auto state = geometry.GetState<RAJA::resources::Host>();
-  const double positions[][3] = {{5, 5, 5}, {5, 20, 5}, {20, 55, 5},
+  const double positions[][3] = {{5, 5, 5},    {5, 20, 5},   {20, 55, 5},
                                  {35, 55, 20}, {35, 80, 35}, {50, 80, 50},
-                                 {-1, 5, 5}, {61, 5, 5}};
-  const CaerorIndexType expected[] = {2, 1, 1, 1, 1, 0, MAXCaerorIndex, MAXCaerorIndex};
+                                 {-1, 5, 5},   {61, 5, 5}};
+  const CaerorIndexType expected[] = {
+      2, 1, 1, 1, 1, 0, MAXCaerorIndex, MAXCaerorIndex};
   for (int i = 0; i < 8; ++i) {
     Particle p{};
     p.x = positions[i][0];
@@ -555,7 +560,8 @@ TEST(CaerorGeometryState, TraceKobayashiAlongY) {
 
 TEST(CaerorGeometryState, ReflectObliquePlane) {
   GeometryConstructor input;
-  auto wall = input.CreatePlane(3.0, 4.0, 0.0, -25.0, BoundaryCondition::Reflective);
+  auto wall =
+      input.CreatePlane(3.0, 4.0, 0.0, -25.0, BoundaryCondition::Reflective);
   input.CreateCell(-wall, MaterialID{0});
 
   CaerorGeometry geometry(input);
@@ -578,7 +584,8 @@ TEST(CaerorGeometryState, ReflectObliquePlane) {
 TEST(CaerorGeometryState, ReflectOffSurface) {
   GeometryConstructor input;
   auto left = input.CreateAxisAlignedPlane(Axis::X, 0.0);
-  auto right = input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Reflective);
+  auto right =
+      input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Reflective);
   input.CreateCell(+left && -right, MaterialID{0});
 
   CaerorGeometry geometry(input);
@@ -604,4 +611,4 @@ TEST(CaerorGeometryState, ReflectOffSurface) {
   EXPECT_EQ(next.surface, left.id_);
 }
 
-} // namespace
+}  // namespace

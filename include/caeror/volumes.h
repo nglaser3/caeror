@@ -17,4 +17,4 @@ struct Universe {
   const UniverseID id_;
   std::vector<CellID> cells_;
 };
-} // namespace caeror
+}  // namespace caeror

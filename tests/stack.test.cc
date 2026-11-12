@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "caeror/stack.h"
+
+#include <gtest/gtest.h>
 
 namespace {
 using namespace caeror;
@@ -57,4 +57,4 @@ TEST(Stack, BooleanValues) {
 
   EXPECT_TRUE(stack.Empty());
 }
-} // namespace
+}  // namespace

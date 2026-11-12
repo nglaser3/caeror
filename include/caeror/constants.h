@@ -8,4 +8,4 @@ namespace caeror {
 inline constexpr double TOLERANCE = 1e-10;
 inline constexpr double INF = std::numeric_limits<double>::infinity();
 
-} // namespace caeror
+}  // namespace caeror

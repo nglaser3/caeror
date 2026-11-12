@@ -1,9 +1,8 @@
 #pragma once
 
+#include <RAJA/RAJA.hpp>
 #include <cstdint>
 #include <limits>
-
-#include <RAJA/RAJA.hpp>
 
 namespace caeror {
 // ==========================================================================
@@ -48,4 +47,4 @@ using CaerorView = RAJA::View<const DataType, LayoutType>;
 template <typename DataType, typename LayoutType>
 using CaerorWritableView = RAJA::View<DataType, LayoutType>;
 
-} // namespace caeror
+}  // namespace caeror

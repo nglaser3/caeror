@@ -11,21 +11,27 @@ inline GeometryConstructor CreateKobayashi() {
   GeometryConstructor geometry;
 
   // x=0, y=0, z=0 are reflective; x=60, y=100, z=60 are vacuum.
-  const auto x1 = geometry.CreateAxisAlignedPlane(Axis::X, 0.0, BoundaryCondition::Reflective);
+  const auto x1 = geometry.CreateAxisAlignedPlane(
+      Axis::X, 0.0, BoundaryCondition::Reflective);
   const auto x2 = geometry.CreateAxisAlignedPlane(Axis::X, 10.0);
   const auto x3 = geometry.CreateAxisAlignedPlane(Axis::X, 30.0);
   const auto x4 = geometry.CreateAxisAlignedPlane(Axis::X, 40.0);
-  const auto x5 = geometry.CreateAxisAlignedPlane(Axis::X, 60.0, BoundaryCondition::Vacuum);
-  const auto y1 = geometry.CreateAxisAlignedPlane(Axis::Y, 0.0, BoundaryCondition::Reflective);
+  const auto x5 =
+      geometry.CreateAxisAlignedPlane(Axis::X, 60.0, BoundaryCondition::Vacuum);
+  const auto y1 = geometry.CreateAxisAlignedPlane(
+      Axis::Y, 0.0, BoundaryCondition::Reflective);
   const auto y2 = geometry.CreateAxisAlignedPlane(Axis::Y, 10.0);
   const auto y3 = geometry.CreateAxisAlignedPlane(Axis::Y, 50.0);
   const auto y4 = geometry.CreateAxisAlignedPlane(Axis::Y, 60.0);
-  const auto y5 = geometry.CreateAxisAlignedPlane(Axis::Y, 100.0, BoundaryCondition::Vacuum);
-  const auto z1 = geometry.CreateAxisAlignedPlane(Axis::Z, 0.0, BoundaryCondition::Reflective);
+  const auto y5 = geometry.CreateAxisAlignedPlane(Axis::Y, 100.0,
+                                                  BoundaryCondition::Vacuum);
+  const auto z1 = geometry.CreateAxisAlignedPlane(
+      Axis::Z, 0.0, BoundaryCondition::Reflective);
   const auto z2 = geometry.CreateAxisAlignedPlane(Axis::Z, 10.0);
   const auto z3 = geometry.CreateAxisAlignedPlane(Axis::Z, 30.0);
   const auto z4 = geometry.CreateAxisAlignedPlane(Axis::Z, 40.0);
-  const auto z5 = geometry.CreateAxisAlignedPlane(Axis::Z, 60.0, BoundaryCondition::Vacuum);
+  const auto z5 =
+      geometry.CreateAxisAlignedPlane(Axis::Z, 60.0, BoundaryCondition::Vacuum);
 
   const auto source_region = +x1 && -x2 && +y1 && -y2 && +z1 && -z2;
   const auto channel_1 = +x1 && -x2 && +y2 && -y3 && +z1 && -z2;
@@ -43,4 +49,4 @@ inline GeometryConstructor CreateKobayashi() {
 
   return geometry;
 }
-} // namespace caeror
+}  // namespace caeror

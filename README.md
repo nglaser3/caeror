@@ -1,5 +1,7 @@
 # Caeror
 
+[![Build and test](https://github.com/scram-lab/caeror/actions/workflows/build-test.yml/badge.svg)](https://github.com/scram-lab/caeror/actions/workflows/build-test.yml)
+
 ## Overview
 
 Caeror is a library for ray tracing through constructive solid geometry (CSG) representations, targeting CPU and GPU backends.

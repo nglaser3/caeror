@@ -18,6 +18,7 @@ include(cmake/CaerorSetupRAJA.cmake)
 
 add_subdirectory("${CAEROR_SRC_DIR}")
 target_compile_features(caeror PUBLIC cxx_std_23)
+include(cmake/CaerorCoverage.cmake)
 
 if(CAEROR_BUILD_TESTS)
   enable_testing()

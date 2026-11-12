@@ -2,6 +2,11 @@
   "version": 6,
   "configurePresets": [
     {
+      "name": "docs",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/docs"
+    },
+    {
       "name": "base",
       "hidden": true,
       "binaryDir": "${sourceDir}/build/${presetName}",
@@ -27,6 +32,11 @@
     }
   ],
   "buildPresets": [
+    {
+      "name": "docs",
+      "configurePreset": "docs",
+      "targets": ["docs"]
+    },
     {
       "name": "release",
       "configurePreset": "release"
@@ -71,6 +81,13 @@
     }
   ],
   "workflowPresets": [
+    {
+      "name": "docs",
+      "steps": [
+        {"type": "configure", "name": "docs"},
+        {"type": "build", "name": "docs"}
+      ]
+    },
     {
       "name": "release",
       "steps": [

@@ -20,6 +20,8 @@ add_subdirectory("${CAEROR_SRC_DIR}")
 target_compile_features(caeror PUBLIC cxx_std_23)
 include(cmake/CaerorCoverage.cmake)
 
+add_subdirectory(docs)
+
 if(CAEROR_BUILD_TESTS)
   enable_testing()
   add_subdirectory("${CAEROR_TESTS_DIR}")

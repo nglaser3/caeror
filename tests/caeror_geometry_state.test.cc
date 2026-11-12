@@ -146,8 +146,9 @@ TEST(CaerorGeometryState, TangentPlaneRetainsCurrentCell) {
     p.cell = CellID{i};
     auto found = state.FindCell(p);
     EXPECT_EQ(found, p.cell);
-    auto crossed = state.CrossSurface(p, SurfaceID{1});
-    EXPECT_EQ(crossed, p.cell);
+    auto result = state.CrossSurface(p, SurfaceID{1});
+    EXPECT_EQ(result.cell, p.cell);
+    EXPECT_FALSE(result.leaked);
   }
 }
 
@@ -246,8 +247,9 @@ TEST(CaerorGeometryState, UnionSkipsInternalSurface) {
   EXPECT_DOUBLE_EQ(result.distance, 4.0);
   EXPECT_EQ(result.surface, right.id_);
   p.x = 2.0;
-  auto crossed = state.CrossSurface(p, middle.id_);
-  EXPECT_EQ(crossed, p.cell);
+  auto cross_result = state.CrossSurface(p, middle.id_);
+  EXPECT_EQ(cross_result.cell, p.cell);
+  EXPECT_FALSE(cross_result.leaked);
 }
 
 TEST(CaerorGeometryState, UnionReportsInternalSurface) {
@@ -354,7 +356,8 @@ TEST(CaerorGeometryState, CrossSlabsBothDirections) {
     auto leaving = state.InCell(p, p.cell);
     EXPECT_FALSE(leaving);
     auto result = state.CrossSurface(p, SurfaceID{1});
-    EXPECT_EQ(result, next);
+    EXPECT_EQ(result.cell, next);
+    EXPECT_FALSE(result.leaked);
   }
 }
 
@@ -367,10 +370,11 @@ TEST(CaerorGeometryState, CrossAwayFromBoundaryKeepsCell) {
   p.ux = 1.0;
   p.cell = CellID{0};
   auto result = state.CrossSurface(p, SurfaceID{1});
-  EXPECT_EQ(result, p.cell);
+  EXPECT_EQ(result.cell, p.cell);
+  EXPECT_FALSE(result.leaked);
 }
 
-TEST(CaerorGeometryState, ExitGeometryHasNoNextCell) {
+TEST(CaerorGeometryState, TransmissionWithoutNeighborLeaks) {
   auto input = CreateSlabs();
   CaerorGeometry geometry(input);
   auto state = geometry.GetState<RAJA::resources::Host>();
@@ -379,7 +383,67 @@ TEST(CaerorGeometryState, ExitGeometryHasNoNextCell) {
   p.ux = 1.0;
   p.cell = CellID{1};
   auto result = state.CrossSurface(p, SurfaceID{2});
-  EXPECT_EQ(result, CellID{MAXCaerorIndex});
+  EXPECT_EQ(result.cell, CellID{MAXCaerorIndex});
+  EXPECT_TRUE(result.leaked);
+}
+
+TEST(CaerorGeometryState, VacuumExitLeaks) {
+  GeometryConstructor input;
+  auto wall = input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
+  input.CreateCell(-wall, MaterialID{0});
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+  Particle p{};
+  p.x = 2.0;
+  p.ux = 1.0;
+  p.cell = CellID{0};
+  auto result = state.CrossSurface(p, wall.id_);
+  EXPECT_EQ(result.cell, CellID{MAXCaerorIndex});
+  EXPECT_TRUE(result.leaked);
+}
+
+TEST(CaerorGeometryState, VacuumRequiresExit) {
+  GeometryConstructor input;
+  auto wall = input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
+  input.CreateCell(-wall, MaterialID{0});
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+  Particle p{};
+  p.x = 1.0;
+  p.ux = 1.0;
+  p.cell = CellID{0};
+  auto result = state.CrossSurface(p, wall.id_);
+  EXPECT_EQ(result.cell, p.cell);
+  EXPECT_FALSE(result.leaked);
+
+  p.x = 2.0;
+  p.ux = -1.0;
+  result = state.CrossSurface(p, wall.id_);
+  EXPECT_EQ(result.cell, p.cell);
+  EXPECT_FALSE(result.leaked);
+
+  p.ux = 0.0;
+  p.uy = 1.0;
+  result = state.CrossSurface(p, wall.id_);
+  EXPECT_EQ(result.cell, p.cell);
+  EXPECT_FALSE(result.leaked);
+}
+
+TEST(CaerorGeometryState, VacuumWithNeighborTransmits) {
+  GeometryConstructor input;
+  auto wall = input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Vacuum);
+  input.CreateCell(-wall, MaterialID{0});
+  input.CreateCell(+wall, MaterialID{1});
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+  Particle p{};
+  p.x = 2.0;
+  p.ux = 1.0;
+  p.cell = CellID{0};
+  // BCs apply only when leaving the geometry, not between neighboring cells.
+  auto result = state.CrossSurface(p, wall.id_);
+  EXPECT_EQ(result.cell, CellID{1});
+  EXPECT_FALSE(result.leaked);
 }
 
 TEST(CaerorGeometryState, CrossingChecksEntireCandidateRegion) {
@@ -398,7 +462,8 @@ TEST(CaerorGeometryState, CrossingChecksEntireCandidateRegion) {
   auto entering = state.InCell(p, CellID{0});
   EXPECT_FALSE(entering);
   auto result = state.CrossSurface(p, x.id_);
-  EXPECT_EQ(result, CellID{1});
+  EXPECT_EQ(result.cell, CellID{1});
+  EXPECT_FALSE(result.leaked);
 }
 
 TEST(CaerorGeometryState, ComplementBoundaryMembership) {
@@ -431,8 +496,9 @@ TEST(CaerorGeometryState, TraceSlabsWithoutNudging) {
     ASSERT_DOUBLE_EQ(boundary.distance, i == 0 ? 1.0 : 3.0);
     ASSERT_EQ(boundary.surface, SurfaceID{i + 1});
     p.x += boundary.distance * p.ux;
-    auto next = state.CrossSurface(p, boundary.surface);
-    p.cell = next;
+    auto result = state.CrossSurface(p, boundary.surface);
+    EXPECT_EQ(result.leaked, i == 1);
+    p.cell = result.cell;
   }
   EXPECT_EQ(p.cell, CellID{MAXCaerorIndex});
   EXPECT_DOUBLE_EQ(p.x, 5.0);
@@ -479,8 +545,9 @@ TEST(CaerorGeometryState, TraceKobayashiAlongY) {
     ASSERT_DOUBLE_EQ(boundary.distance, distances[i]);
     ASSERT_EQ(boundary.surface, SurfaceID{surfaces[i]});
     p.y += boundary.distance * p.uy;
-    auto next = state.CrossSurface(p, boundary.surface);
-    p.cell = next;
+    auto result = state.CrossSurface(p, boundary.surface);
+    EXPECT_EQ(result.leaked, i == 2);
+    p.cell = result.cell;
   }
   EXPECT_EQ(p.cell, CellID{MAXCaerorIndex});
   EXPECT_DOUBLE_EQ(p.y, 100.0);

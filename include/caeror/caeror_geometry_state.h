@@ -15,6 +15,11 @@ struct DistanceResult {
   SurfaceID surface;
 };
 
+struct SurfaceCrossingResult {
+  CellID cell;
+  bool leaked;
+};
+
 struct CaerorGeometryData {
   double *surfaces_data = nullptr;
   CellID *surface_cell_ids = nullptr;
@@ -160,26 +165,43 @@ struct CaerorGeometryState {
   }
 
   RAJA_HOST_DEVICE
-  CellID CrossSurface(const Particle &p, const SurfaceID &s) const {
+  SurfaceCrossingResult CrossSurface(const Particle &p, const SurfaceID &s) const {
     const auto stype =
         static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{SURFACE_TYPE_INDEX}));
     if (SenseResult::On != Sense(stype, p, &surfaces(s, SurfaceDataIndex{SURFACE_DATA_OFFSET})))
       // not actually on a boundary, no cross possible
-      return p.cell;
+      return {p.cell, false};
 
     // if particle is still in the current cell, crossing the surface doesnt do anything
-    if (InCell(p, p.cell)) return p.cell;
+    if (InCell(p, p.cell)) return {p.cell, false};
 
     // loop over cells attached to the surface
     for (const auto lc : RAJA::range<LocalCellID>(0, surface_num_cells(s))) {
       const auto &c = surface_cells(s, lc);
       if (InCell(p, c))
-        return c;
+        return {c, false};
     }
-    return CellID{MAXCaerorIndex};
+
+    // at a boundary, apply boundary condition
+    return ApplyBoundaryCondition(p, s);
   };
 
 private:
+  /// @brief Apply a boundary condition to a particle at specified surface
+  RAJA_HOST_DEVICE
+  SurfaceCrossingResult ApplyBoundaryCondition(const Particle &p, const SurfaceID &s) const {
+    const auto bc_type = static_cast<BoundaryCondition>(surfaces(s, SurfaceDataIndex{SURFACE_BC_INDEX}));
+    switch (bc_type)
+    {
+    case BoundaryCondition::Vacuum:
+      return {CellID{MAXCaerorIndex}, true};
+    case BoundaryCondition::Transmission:
+      return {CellID{MAXCaerorIndex}, true};
+    default:
+      return {CellID{MAXCaerorIndex}, true};
+    }
+  }
+
   /// @brief Evaluate stack if the particle is perfectly tangent to surface
   RAJA_HOST_DEVICE
   bool InCellTangent(const Particle &p, const CellID c) const {

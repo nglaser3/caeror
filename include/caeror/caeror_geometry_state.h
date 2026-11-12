@@ -165,7 +165,7 @@ struct CaerorGeometryState {
   }
 
   RAJA_HOST_DEVICE
-  SurfaceCrossingResult CrossSurface(const Particle &p, const SurfaceID &s) const {
+  SurfaceCrossingResult CrossSurface(Particle &p, const SurfaceID &s) const {
     const auto stype =
         static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{SURFACE_TYPE_INDEX}));
     if (SenseResult::On != Sense(stype, p, &surfaces(s, SurfaceDataIndex{SURFACE_DATA_OFFSET})))
@@ -189,10 +189,19 @@ struct CaerorGeometryState {
 private:
   /// @brief Apply a boundary condition to a particle at specified surface
   RAJA_HOST_DEVICE
-  SurfaceCrossingResult ApplyBoundaryCondition(const Particle &p, const SurfaceID &s) const {
+  SurfaceCrossingResult ApplyBoundaryCondition(Particle &p, const SurfaceID &s) const {
     const auto bc_type = static_cast<BoundaryCondition>(surfaces(s, SurfaceDataIndex{SURFACE_BC_INDEX}));
     switch (bc_type)
     {
+    case BoundaryCondition::Reflective: {
+      const auto stype = static_cast<SurfaceType>(surfaces(s, SurfaceDataIndex{SURFACE_TYPE_INDEX}));
+      const auto n = Normal(stype, p, &surfaces(s, SurfaceDataIndex{SURFACE_DATA_OFFSET}));
+      const double dot = n.ux * p.ux + n.uy * p.uy + n.uz * p.uz;
+      p.ux -= 2.0 * dot * n.ux;
+      p.uy -= 2.0 * dot * n.uy;
+      p.uz -= 2.0 * dot * n.uz;
+      return {p.cell, false};
+    }
     case BoundaryCondition::Vacuum:
       return {CellID{MAXCaerorIndex}, true};
     case BoundaryCondition::Transmission:

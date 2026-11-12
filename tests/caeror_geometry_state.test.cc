@@ -320,7 +320,7 @@ TEST(CaerorGeometryState, ObliquePlaneDistance) {
   p.uy = 0.8;
   p.cell = CellID{0};
   auto result = state.DistanceToSurface(p);
-  EXPECT_NEAR(result.distance, 2.0 / 1.4, TOLERANCE);
+  EXPECT_DOUBLE_EQ(result.distance, 2.0 / 1.4);
   EXPECT_EQ(result.surface, plane.id_);
 }
 
@@ -551,6 +551,57 @@ TEST(CaerorGeometryState, TraceKobayashiAlongY) {
   }
   EXPECT_EQ(p.cell, CellID{MAXCaerorIndex});
   EXPECT_DOUBLE_EQ(p.y, 100.0);
+}
+
+TEST(CaerorGeometryState, ReflectObliquePlane) {
+  GeometryConstructor input;
+  auto wall = input.CreatePlane(3.0, 4.0, 0.0, -25.0, BoundaryCondition::Reflective);
+  input.CreateCell(-wall, MaterialID{0});
+
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+
+  Particle p{};
+  p.x = 3.0;
+  p.y = 4.0;
+  p.ux = 1.0;
+  p.cell = CellID{0};
+
+  auto result = state.CrossSurface(p, wall.id_);
+  EXPECT_EQ(result.cell, CellID{0});
+  EXPECT_FALSE(result.leaked);
+  EXPECT_DOUBLE_EQ(p.ux, 0.28);
+  EXPECT_DOUBLE_EQ(p.uy, -0.96);
+  EXPECT_DOUBLE_EQ(p.uz, 0.0);
+}
+
+TEST(CaerorGeometryState, ReflectOffSurface) {
+  GeometryConstructor input;
+  auto left = input.CreateAxisAlignedPlane(Axis::X, 0.0);
+  auto right = input.CreateAxisAlignedPlane(Axis::X, 2.0, BoundaryCondition::Reflective);
+  input.CreateCell(+left && -right, MaterialID{0});
+
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+
+  Particle p{};
+  p.x = 2.0;
+  p.ux = 0.6;
+  p.uy = 0.8;
+  p.cell = CellID{0};
+
+  auto result = state.CrossSurface(p, right.id_);
+  EXPECT_EQ(result.cell, p.cell);
+  EXPECT_FALSE(result.leaked);
+  EXPECT_DOUBLE_EQ(p.ux, -0.6);
+  EXPECT_DOUBLE_EQ(p.uy, 0.8);
+  EXPECT_DOUBLE_EQ(p.uz, 0.0);
+  EXPECT_DOUBLE_EQ(p.x, 2.0);
+  EXPECT_DOUBLE_EQ(p.y, 0.0);
+  EXPECT_DOUBLE_EQ(p.z, 0.0);
+  auto next = state.DistanceToCellBoundary(p);
+  EXPECT_DOUBLE_EQ(next.distance, 2.0 / 0.6);
+  EXPECT_EQ(next.surface, left.id_);
 }
 
 } // namespace

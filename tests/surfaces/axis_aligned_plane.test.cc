@@ -135,4 +135,19 @@ TEST(AxisAlignedPlane, AlignedNormal) {
     }
   }
 }
+TEST(AxisAlignedPlane, Normal) {
+  for (Axis axis : {Axis::X, Axis::Y, Axis::Z}) {
+    const double data[] = {static_cast<double>(axis), 0.0};
+    Particle p{};
+    auto raw = Normal<SurfaceType::AxisAlignedPlane>(p, data);
+    EXPECT_DOUBLE_EQ(raw.ux, axis == Axis::X ? 1.0 : 0.0);
+    EXPECT_DOUBLE_EQ(raw.uy, axis == Axis::Y ? 1.0 : 0.0);
+    EXPECT_DOUBLE_EQ(raw.uz, axis == Axis::Z ? 1.0 : 0.0);
+    auto result = Normal(SurfaceType::AxisAlignedPlane, p, data);
+    EXPECT_DOUBLE_EQ(result.ux, raw.ux);
+    EXPECT_DOUBLE_EQ(result.uy, raw.uy);
+    EXPECT_DOUBLE_EQ(result.uz, raw.uz);
+  }
+}
+
 } // namespace

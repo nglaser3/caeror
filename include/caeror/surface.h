@@ -25,6 +25,13 @@ struct IntersectionResult {
 };
 
 /**
+ * @brief Container for surface normal
+ */
+struct SurfaceNormal {
+  double ux, uy, uz;
+};
+
+/**
  * @brief Enum of allowed axes
  */
 enum Axis : int { X, Y, Z };
@@ -35,6 +42,7 @@ enum Axis : int { X, Y, Z };
 enum BoundaryCondition : int {
   Transmission,
   Vacuum,
+  Reflective,
 };
 
 /**
@@ -94,6 +102,9 @@ RAJA_HOST_DEVICE IntersectionResult Intersection(const Particle &p,
 template <SurfaceType Type>
 RAJA_HOST_DEVICE bool AlignedNormal(const Particle &p, const SenseResult sense,
                                     const double *data);
+
+template <SurfaceType Type>
+RAJA_HOST_DEVICE SurfaceNormal Normal(const Particle &p, const double *data);
 
 // ============================================================================
 // Generic Plane
@@ -167,6 +178,15 @@ RAJA_HOST_DEVICE inline bool AlignedNormal<SurfaceType::Plane>(const Particle &p
   default:
     return false;
   }
+}
+
+template <>
+RAJA_HOST_DEVICE inline SurfaceNormal Normal<SurfaceType::Plane>(const Particle &, const double *data) {
+  const double a = data[static_cast<int>(PlaneData::A)];
+  const double b = data[static_cast<int>(PlaneData::B)];
+  const double c = data[static_cast<int>(PlaneData::C)];
+
+  return {a, b, c};
 }
 
 // ============================================================================
@@ -278,6 +298,21 @@ RAJA_HOST_DEVICE inline bool AlignedNormal<SurfaceType::AxisAlignedPlane>(
   default:
     return false;
   }
+}
+
+template <>
+RAJA_HOST_DEVICE inline SurfaceNormal Normal<SurfaceType::AxisAlignedPlane>(const Particle &, const double *data) {
+  const Axis axis = static_cast<Axis>(data[static_cast<int>(AxisAlignedPlaneData::Axis)]);
+  switch (axis)
+  {
+  case Axis::X:
+    return {1.0, 0.0, 0.0};
+  case Axis::Y:
+    return {0.0, 1.0, 0.0};
+  case Axis::Z:
+    return {0.0, 0.0, 1.0};
+  }
+  return {};
 }
 
 // ============================================================================
@@ -418,6 +453,23 @@ RAJA_HOST_DEVICE inline bool AlignedNormal<SurfaceType::AxisAlignedCylinder>(
   }
 }
 
+template <>
+RAJA_HOST_DEVICE inline SurfaceNormal Normal<SurfaceType::AxisAlignedCylinder>(const Particle &p, const double *data) {
+  const Axis axis =
+      static_cast<Axis>(data[static_cast<int>(AxisAlignedCylinderData::Axis)]);
+  const auto center1 = data[static_cast<int>(AxisAlignedCylinderData::Center1)];
+  const auto center2 = data[static_cast<int>(AxisAlignedCylinderData::Center2)];
+  switch (axis) {
+  case Axis::X:
+    return {0.0, p.y - center1, p.z - center2};
+  case Axis::Y:
+    return {p.x - center1, 0.0, p.z - center2};
+  case Axis::Z:
+    return {p.x - center1, p.y - center2, 0.0};
+  }
+  return {};
+}
+
 // ============================================================================
 // Sphere
 // ============================================================================
@@ -503,6 +555,14 @@ AlignedNormal<SurfaceType::Sphere>(const Particle &p, const SenseResult sense,
   }
 }
 
+template <>
+RAJA_HOST_DEVICE inline SurfaceNormal Normal<SurfaceType::Sphere>(const Particle &p, const double *data) {
+  const double xc = data[static_cast<int>(SphereData::XCenter)];
+  const double yc = data[static_cast<int>(SphereData::YCenter)];
+  const double zc = data[static_cast<int>(SphereData::ZCenter)];
+  return {p.x - xc, p.y - yc, p.z - zc};
+}
+
 // ============================================================================
 // Bookkeeping
 // ============================================================================
@@ -576,4 +636,27 @@ RAJA_HOST_DEVICE inline SenseResult DirectionalSense(
   return SenseResult::On;
 }
 
+RAJA_HOST_DEVICE inline SurfaceNormal Normal(
+    SurfaceType stype, const Particle &p, const double *data) {
+  SurfaceNormal normal{};
+  switch (stype) {
+  case SurfaceType::Plane:
+    normal = Normal<SurfaceType::Plane>(p, data);
+    break;
+  case SurfaceType::AxisAlignedPlane:
+    normal = Normal<SurfaceType::AxisAlignedPlane>(p, data);
+    break;
+  case SurfaceType::AxisAlignedCylinder:
+    normal = Normal<SurfaceType::AxisAlignedCylinder>(p, data);
+    break;
+  case SurfaceType::Sphere:
+    normal = Normal<SurfaceType::Sphere>(p, data);
+    break;
+  }
+  double norm = sqrt(normal.ux * normal.ux + normal.uy * normal.uy + normal.uz * normal.uz);
+  normal.ux /= norm;
+  normal.uy /= norm;
+  normal.uz /= norm;
+  return normal;
+}
 } // namespace caeror

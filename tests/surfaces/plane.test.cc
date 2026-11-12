@@ -100,4 +100,18 @@ TEST(Plane, AlignedNormal) {
     }
   }
 }
+TEST(Plane, Normal) {
+  const double data[] = {-3.0, 0.0, 4.0, -8.0};
+  Particle p{};
+  p.z = 2.0;
+  auto raw = Normal<SurfaceType::Plane>(p, data);
+  EXPECT_DOUBLE_EQ(raw.ux, -3.0);
+  EXPECT_DOUBLE_EQ(raw.uy, 0.0);
+  EXPECT_DOUBLE_EQ(raw.uz, 4.0);
+  auto result = Normal(SurfaceType::Plane, p, data);
+  EXPECT_DOUBLE_EQ(result.ux, -0.6);
+  EXPECT_DOUBLE_EQ(result.uy, 0.0);
+  EXPECT_DOUBLE_EQ(result.uz, 0.8);
+}
+
 } // namespace

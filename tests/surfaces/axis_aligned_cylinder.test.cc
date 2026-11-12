@@ -135,4 +135,19 @@ TEST(AxisAlignedCylinder, AlignedNormal) {
     }
   }
 }
+TEST(AxisAlignedCylinder, Normal) {
+  for (Axis axis : {Axis::X, Axis::Y, Axis::Z}) {
+    const double data[] = {static_cast<double>(axis), 5.0, 1.0, -2.0};
+    auto p = MakeParticle(axis, 4.0, -6.0, 7.0, 1.0, 0.0, 0.0);
+    auto raw = Normal<SurfaceType::AxisAlignedCylinder>(p, data);
+    EXPECT_DOUBLE_EQ(raw.ux, axis == Axis::X ? 0.0 : 3.0);
+    EXPECT_DOUBLE_EQ(raw.uy, axis == Axis::X ? 3.0 : axis == Axis::Y ? 0.0 : -4.0);
+    EXPECT_DOUBLE_EQ(raw.uz, axis == Axis::Z ? 0.0 : -4.0);
+    auto result = Normal(SurfaceType::AxisAlignedCylinder, p, data);
+    EXPECT_DOUBLE_EQ(result.ux, raw.ux / 5.0);
+    EXPECT_DOUBLE_EQ(result.uy, raw.uy / 5.0);
+    EXPECT_DOUBLE_EQ(result.uz, raw.uz / 5.0);
+  }
+}
+
 } // namespace

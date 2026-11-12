@@ -112,4 +112,20 @@ TEST(Sphere, AlignedNormal) {
     }
   }
 }
+TEST(Sphere, Normal) {
+  const double data[] = {5.0, 1.0, 2.0, 7.0};
+  Particle p{};
+  p.x = 4.0;
+  p.y = -2.0;
+  p.z = 7.0;
+  auto raw = Normal<SurfaceType::Sphere>(p, data);
+  EXPECT_DOUBLE_EQ(raw.ux, 3.0);
+  EXPECT_DOUBLE_EQ(raw.uy, -4.0);
+  EXPECT_DOUBLE_EQ(raw.uz, 0.0);
+  auto result = Normal(SurfaceType::Sphere, p, data);
+  EXPECT_DOUBLE_EQ(result.ux, 0.6);
+  EXPECT_DOUBLE_EQ(result.uy, -0.8);
+  EXPECT_DOUBLE_EQ(result.uz, 0.0);
+}
+
 } // namespace

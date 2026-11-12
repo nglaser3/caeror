@@ -8,19 +8,31 @@
 #include "caeror/surface.h"
 
 namespace caeror {
+/// @cond
+/// @brief Struct for storing a region's logic
 struct Region {
   const std::vector<RPNToken> logic_;
   const size_t stack_size;
 };
+/// @endcond
 
+/**
+ * @brief Create a positive halfspace from a surface
+ */
 inline Region operator+(const SurfaceBase& surf) {
   return Region{{RPNToken{*surf.id_}}, 1};
 }
 
+/**
+ * @brief Create a negative halfspace from a surface
+ */
 inline Region operator-(const SurfaceBase& surf) {
   return Region{{RPNToken{*surf.id_}, RPNToken{RPN_NOT}}, 1};
 }
 
+/**
+ * @brief Create an intersection of two regions
+ */
 inline Region operator&&(const Region& r1, const Region& r2) {
   std::vector<RPNToken> logic;
   logic.reserve(r1.logic_.size() + r2.logic_.size() + 1);
@@ -30,6 +42,9 @@ inline Region operator&&(const Region& r1, const Region& r2) {
   return Region{logic, std::max(r1.stack_size, 1 + r2.stack_size)};
 }
 
+/**
+ * @brief Create a union of two regions
+ */
 inline Region operator||(const Region& r1, const Region& r2) {
   std::vector<RPNToken> logic;
   logic.reserve(r1.logic_.size() + r2.logic_.size() + 1);
@@ -39,6 +54,9 @@ inline Region operator||(const Region& r1, const Region& r2) {
   return Region{logic, std::max(r1.stack_size, 1 + r2.stack_size)};
 }
 
+/**
+ * @brief Create the complement of a region 
+ */
 inline Region operator!(const Region& r1) {
   auto logic = r1.logic_;
   logic.emplace_back(RPN_NOT);

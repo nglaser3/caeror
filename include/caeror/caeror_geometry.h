@@ -15,17 +15,33 @@
 
 namespace caeror {
 
+/**
+ * @brief Class responsible for storing and managing the compiled geometry.
+ */
 class CaerorGeometry {
  public:
+  /**
+   * @brief Construct a CaerorGeometry instance from input
+   */
   CaerorGeometry(const GeometryConstructor& input) {
     GenerateSurfacesData(input);
     GenerateCellsData(input);
     GenerateUniverseData(input);
   }
 
+  /**
+   * @brief Copy constructor
+   */
   CaerorGeometry(const CaerorGeometry&) = delete;
+
+  /**
+   * @brief Copy Assignment
+   */
   CaerorGeometry& operator=(const CaerorGeometry&) = delete;
 
+  /**
+   * @brief Destructor
+   */
   ~CaerorGeometry() {
     for (auto& release : release_resource_data_) release();
 
@@ -42,6 +58,9 @@ class CaerorGeometry {
     delete[] uni_cell_sizes_;
   }
 
+  /**
+   * @brief Compile surfaces data from input
+   */
   void GenerateSurfacesData(const GeometryConstructor& input) {
     const auto& surface_types = input.GetSurfaceTypes();
     num_surfaces_ = surface_types.size();
@@ -116,6 +135,9 @@ class CaerorGeometry {
     }
   }
 
+  /**
+   * @brief Helper function for filling data from surfaces
+   */
   template <SurfaceType Type, auto Index>
   void FillSurfaceData(const SurfaceBase& s, size_t offset) {
     const auto& surface = CastSurface<Type>(s);
@@ -124,6 +146,9 @@ class CaerorGeometry {
         static_cast<double>(camp::get<index>(surface.data_));
   }
 
+  /**
+   * @brief Compile cells data from input
+   */
   void GenerateCellsData(const GeometryConstructor& input) {
     const auto& cells = input.GetCells();
     num_cells_ = cells.size();
@@ -173,6 +198,9 @@ class CaerorGeometry {
     }
   }
 
+  /**
+   * @brief Compile universes data from input
+   */
   void GenerateUniverseData(const GeometryConstructor& input) {
     const auto& universes = input.GetUniverses();
     num_universes_ = universes.size();
@@ -197,6 +225,9 @@ class CaerorGeometry {
     }
   }
 
+  /**
+   * @brief Get an interactable state of the CaerorGeometry instance
+   */
   template <typename RajaResource>
   CaerorGeometryState GetState(RajaResource resource = {}) & {
     CaerorGeometryData data{};
@@ -229,6 +260,9 @@ class CaerorGeometry {
     return CaerorGeometryState(data);
   }
 
+  /**
+   * @brief Disallow state creation from temporary instance
+   */
   template <typename RajaResource>
   CaerorGeometryState GetState(RajaResource resource = {}) && = delete;
 

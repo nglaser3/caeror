@@ -59,9 +59,14 @@ inline constexpr size_t SURFACE_TYPE_INDEX = 0;
 inline constexpr size_t SURFACE_BC_INDEX = 1;
 inline constexpr size_t SURFACE_DATA_OFFSET = 2;
 
+/// @cond
 template <SurfaceType Type>
 struct SurfaceTraits;
+/// @endcond
 
+/**
+ * @brief Base class for all surfaces types
+ */
 struct SurfaceBase {
   explicit SurfaceBase(SurfaceID id,
                        BoundaryCondition bc = BoundaryCondition::Transmission)
@@ -94,17 +99,29 @@ struct Surface : public SurfaceBase {
   camp::tuple<DataTypes...> data_;
 };
 
+/**
+ * @brief Determine which side of the surface the incident particle is on
+ */
 template <SurfaceType Type>
 RAJA_HOST_DEVICE SenseResult Sense(const Particle& p, const double* data);
 
+/**
+ * @brief Determine the Intersection of an incident particle with a surface
+ */
 template <SurfaceType Type, bool SkipZero>
 RAJA_HOST_DEVICE IntersectionResult Intersection(const Particle& p,
                                                  const double* data);
 
+/**
+ * @brief Determine if the particle is traveling in the same direction as the surface's normal
+ */
 template <SurfaceType Type>
 RAJA_HOST_DEVICE bool AlignedNormal(const Particle& p, const SenseResult sense,
                                     const double* data);
 
+/**
+ * @brief Determine the surface's normal vector with respect to the incident particle
+ */
 template <SurfaceType Type>
 RAJA_HOST_DEVICE SurfaceNormal Normal(const Particle& p, const double* data);
 
@@ -114,10 +131,12 @@ RAJA_HOST_DEVICE SurfaceNormal Normal(const Particle& p, const double* data);
 /// @brief Generic plane surface
 using Plane = Surface<SurfaceType::Plane, double, double, double, double>;
 
+/// @cond
 template <>
 struct SurfaceTraits<SurfaceType::Plane> {
   using Type = Plane;
 };
+/// @endcond
 
 /// @brief Helper enum for accessing generic surface data
 enum class PlaneData { A, B, C, D };
@@ -193,10 +212,12 @@ RAJA_HOST_DEVICE inline SurfaceNormal Normal<SurfaceType::Plane>(
 /// @brief Axis aligned plane surface
 using AxisAlignedPlane = Surface<SurfaceType::AxisAlignedPlane, Axis, double>;
 
+/// @cond
 template <>
 struct SurfaceTraits<SurfaceType::AxisAlignedPlane> {
   using Type = AxisAlignedPlane;
 };
+/// @endcond
 
 /// @brief Helper enum for accessing axis aligned plane data
 enum class AxisAlignedPlaneData { Axis, Intercept };
@@ -317,10 +338,12 @@ RAJA_HOST_DEVICE inline SurfaceNormal Normal<SurfaceType::AxisAlignedPlane>(
 using AxisAlignedCylinder =
     Surface<SurfaceType::AxisAlignedCylinder, Axis, double, double, double>;
 
+/// @cond
 template <>
 struct SurfaceTraits<SurfaceType::AxisAlignedCylinder> {
   using Type = AxisAlignedCylinder;
 };
+/// @endcond
 
 /// @brief Helper enum for accessing axis aligned cylinder data, centers are
 /// stored (x, y), (x, z), or (y, z)
@@ -466,10 +489,12 @@ RAJA_HOST_DEVICE inline SurfaceNormal Normal<SurfaceType::AxisAlignedCylinder>(
 /// @brief Sphere surface
 using Sphere = Surface<SurfaceType::Sphere, double, double, double, double>;
 
+/// @cond
 template <>
 struct SurfaceTraits<SurfaceType::Sphere> {
   using Type = Sphere;
 };
+/// @endcond
 
 /// @brief Helper enum for accessing sphere data
 enum class SphereData { Radius, XCenter, YCenter, ZCenter };
@@ -551,18 +576,27 @@ RAJA_HOST_DEVICE inline SurfaceNormal Normal<SurfaceType::Sphere>(
 // ============================================================================
 // Bookkeeping
 // ============================================================================
+/**
+ * @brief Helper function to downcast the surface
+ */
 template <SurfaceType Type>
 RAJA_HOST_DEVICE const auto& CastSurface(const SurfaceBase& s) {
   using FullSurfType = typename SurfaceTraits<Type>::Type;
   return static_cast<const FullSurfType&>(s);
 }
 
+/**
+ * @brief Helper function to get the required data size of the surface type
+ */
 template <SurfaceType Type>
 RAJA_HOST_DEVICE size_t SurfaceDataReq() {
   using FullSurfType = typename SurfaceTraits<Type>::Type;
   return FullSurfType::data_size_;
 }
 
+/**
+ * @brief Dispatch function for evaluating the sense of a surface
+ */
 RAJA_HOST_DEVICE
 inline SenseResult Sense(SurfaceType stype, const Particle& p,
                          const double* data) {
@@ -579,6 +613,9 @@ inline SenseResult Sense(SurfaceType stype, const Particle& p,
   return SenseResult::On;
 }
 
+/**
+ * @brief Dispatch function for evaluating the Intersection with a surface
+ */
 template <bool SkipZero>
 RAJA_HOST_DEVICE inline IntersectionResult Intersection(SurfaceType stype,
                                                         const Particle& p,
@@ -596,6 +633,9 @@ RAJA_HOST_DEVICE inline IntersectionResult Intersection(SurfaceType stype,
   return {INFINITY, false};
 }
 
+/**
+ * @brief Dispatch function for evaluating whether the incident particle is aligned with the normal of the surface
+ */
 RAJA_HOST_DEVICE inline bool AlignedNormal(SurfaceType stype, const Particle& p,
                                            const SenseResult sense,
                                            const double* data) {
@@ -612,6 +652,9 @@ RAJA_HOST_DEVICE inline bool AlignedNormal(SurfaceType stype, const Particle& p,
   return false;
 }
 
+/**
+ * @brief Dispatch function for direction informed Sense
+ */
 RAJA_HOST_DEVICE inline SenseResult DirectionalSense(SurfaceType stype,
                                                      const Particle& p,
                                                      const double* data) {
@@ -624,6 +667,9 @@ RAJA_HOST_DEVICE inline SenseResult DirectionalSense(SurfaceType stype,
   return SenseResult::On;
 }
 
+/**
+ * @brief Dispatch function for getting the surface normal
+ */
 RAJA_HOST_DEVICE inline SurfaceNormal Normal(SurfaceType stype,
                                              const Particle& p,
                                              const double* data) {

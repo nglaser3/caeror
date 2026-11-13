@@ -113,14 +113,16 @@ RAJA_HOST_DEVICE IntersectionResult Intersection(const Particle& p,
                                                  const double* data);
 
 /**
- * @brief Determine if the particle is traveling in the same direction as the surface's normal
+ * @brief Determine if the particle is traveling in the same direction as the
+ * surface's normal
  */
 template <SurfaceType Type>
 RAJA_HOST_DEVICE bool AlignedNormal(const Particle& p, const SenseResult sense,
                                     const double* data);
 
 /**
- * @brief Determine the surface's normal vector with respect to the incident particle
+ * @brief Determine the surface's normal vector with respect to the incident
+ * particle
  */
 template <SurfaceType Type>
 RAJA_HOST_DEVICE SurfaceNormal Normal(const Particle& p, const double* data);
@@ -634,7 +636,8 @@ RAJA_HOST_DEVICE inline IntersectionResult Intersection(SurfaceType stype,
 }
 
 /**
- * @brief Dispatch function for evaluating whether the incident particle is aligned with the normal of the surface
+ * @brief Dispatch function for evaluating whether the incident particle is
+ * aligned with the normal of the surface
  */
 RAJA_HOST_DEVICE inline bool AlignedNormal(SurfaceType stype, const Particle& p,
                                            const SenseResult sense,

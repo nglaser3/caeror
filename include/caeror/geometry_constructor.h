@@ -85,7 +85,7 @@ class GeometryConstructor {
    * @brief Getter for all surfaces in geometry
    */
   auto& GetSurfaces() const { return surfaces_; }
-  
+
   /**
    * @brief Getter for all surface types in geometry
    */
@@ -106,7 +106,7 @@ class GeometryConstructor {
   std::vector<std::unique_ptr<SurfaceBase>> surfaces_;
   /// @brief List of all surfaces' types in geometry
   std::vector<SurfaceType> surface_types_;
-  /// @brief List of all cells 
+  /// @brief List of all cells
   std::vector<std::unique_ptr<Cell>> cells_;
   /// @brief List of all universes
   std::vector<std::unique_ptr<Universe>> universes_;

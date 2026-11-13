@@ -3,7 +3,8 @@
 
 namespace caeror {
 /**
- * @brief Simple container for minimum data required to represent a particle in geometry
+ * @brief Simple container for minimum data required to represent a particle in
+ * geometry
  */
 struct Particle {
   /// @name Spatial position

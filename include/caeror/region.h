@@ -55,7 +55,7 @@ inline Region operator||(const Region& r1, const Region& r2) {
 }
 
 /**
- * @brief Create the complement of a region 
+ * @brief Create the complement of a region
  */
 inline Region operator!(const Region& r1) {
   auto logic = r1.logic_;

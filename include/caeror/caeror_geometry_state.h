@@ -49,7 +49,7 @@ struct CaerorGeometryData {
 /// @endcond
 
 /**
- * @brief queryable state of CaerorGeometry, where ray-tracing operations exist  
+ * @brief queryable state of CaerorGeometry, where ray-tracing operations exist
  */
 struct CaerorGeometryState {
   /// @brief Array containing surface data
@@ -101,7 +101,7 @@ struct CaerorGeometryState {
   RAJA_HOST_DEVICE
   CaerorGeometryState(const CaerorGeometryState&) = default;
 
-  /** 
+  /**
    * @brief Copy assignment
    */
   CaerorGeometryState& operator=(const CaerorGeometryState&) = delete;
@@ -119,7 +119,8 @@ struct CaerorGeometryState {
   }
 
   /**
-   * @brief Routine to determine if an incident particle is in the specified cell
+   * @brief Routine to determine if an incident particle is in the specified
+   * cell
    */
   RAJA_HOST_DEVICE
   bool InCell(const Particle& p, const CellID c) const {
@@ -158,7 +159,8 @@ struct CaerorGeometryState {
   };
 
   /**
-   * @brief Routine to determine the distance to the next surface (including interior surfaces)
+   * @brief Routine to determine the distance to the next surface (including
+   * interior surfaces)
    */
   RAJA_HOST_DEVICE
   DistanceResult DistanceToSurface(const Particle& p) const {
@@ -191,8 +193,9 @@ struct CaerorGeometryState {
   };
 
   /**
-   * @brief Routine to find the distance to the nearest surface (not including interior surfaces).
-   * This is used to find the distance needed to exit a cell.
+   * @brief Routine to find the distance to the nearest surface (not including
+   * interior surfaces). This is used to find the distance needed to exit a
+   * cell.
    */
   RAJA_HOST_DEVICE
   DistanceResult DistanceToCellBoundary(const Particle& p) const {

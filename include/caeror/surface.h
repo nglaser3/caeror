@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <utility>
 
+#include "caeror/constants.h"
 #include "caeror/data.h"
 #include "caeror/raja_layouts.h"
 
@@ -14,6 +15,12 @@ namespace caeror {
  * @brief Enum for sense of a surface
  */
 enum class SenseResult { Negative, On, Positive };
+
+/// @brief Helper function for applying Surface tolerance to Sense 
+RAJA_HOST_DEVICE RAJA_INLINE SenseResult DistanceSense(double distance) {
+  if (fabs(distance) <= SURFACE_TOLERANCE) return SenseResult::On;
+  return distance < 0.0 ? SenseResult::Negative : SenseResult::Positive;
+}
 
 /**
  * @brief Intersection result container
@@ -153,10 +160,8 @@ RAJA_HOST_DEVICE inline SenseResult Sense<SurfaceType::Plane>(
 
   const double value = a * p.x + b * p.y + c * p.z + d0;
 
-  if (value < 0.0) return SenseResult::Negative;
-  if (value > 0.0) return SenseResult::Positive;
-
-  return SenseResult::On;
+  const double norm = sqrt(a * a + b * b + c * c);
+  return DistanceSense(value / norm);
 }
 
 template <SurfaceType Type, bool SkipZero>
@@ -171,6 +176,9 @@ RAJA_HOST_DEVICE inline IntersectionResult Intersection(const Particle& p,
   const double denom = a * p.ux + b * p.uy + c * p.uz;
 
   if (denom == 0.0) return {INFINITY, false};
+
+  if (Sense<SurfaceType::Plane>(p, data) == SenseResult::On)
+    return {SkipZero ? INFINITY : 0.0, !SkipZero};
 
   const double dist = -(a * p.x + b * p.y + c * p.z + d0) / denom;
 
@@ -246,10 +254,7 @@ RAJA_HOST_DEVICE inline SenseResult Sense<SurfaceType::AxisAlignedPlane>(
       break;
   }
 
-  if (value < 0.0) return SenseResult::Negative;
-  if (value > 0.0) return SenseResult::Positive;
-
-  return SenseResult::On;
+  return DistanceSense(value);
 }
 
 template <SurfaceType Type, bool SkipZero>
@@ -279,6 +284,9 @@ RAJA_HOST_DEVICE inline IntersectionResult Intersection(const Particle& p,
   }
 
   if (dir == 0.0) return {INFINITY, false};
+
+  if (Sense<SurfaceType::AxisAlignedPlane>(p, data) == SenseResult::On)
+    return {SkipZero ? INFINITY : 0.0, !SkipZero};
 
   const double distance = (intercept - pos) / dir;
 
@@ -377,11 +385,8 @@ RAJA_HOST_DEVICE inline SenseResult Sense<SurfaceType::AxisAlignedCylinder>(
       break;
   }
 
-  double value = diff1 * diff1 + diff2 * diff2 - radius * radius;
-
-  if (value < 0.0) return SenseResult::Negative;
-  if (value > 0.0) return SenseResult::Positive;
-  return SenseResult::On;
+  const double distance = sqrt(diff1 * diff1 + diff2 * diff2) - radius;
+  return DistanceSense(distance);
 }
 
 template <SurfaceType Type, bool SkipZero>
@@ -423,10 +428,16 @@ RAJA_HOST_DEVICE inline IntersectionResult Intersection(const Particle& p,
 
   const double b = 2.0 * (diff1 * dir1 + diff2 * dir2);
   const double c = diff1 * diff1 + diff2 * diff2 - radius * radius;
+  const bool on = Sense<SurfaceType::AxisAlignedCylinder>(p, data) == SenseResult::On;
+  if (on && !SkipZero) return {0.0, true};
   const double disc = b * b - 4.0 * a * c;
 
   if (disc < 0.0) return {INFINITY, false};
 
+  if (on) {
+    const double far = (-b + (b <= 0.0 ? sqrt(disc) : -sqrt(disc))) / (2.0 * a);
+    return far > 0.0 ? IntersectionResult{far, true} : IntersectionResult{INFINITY, false};
+  }
   const double root1 = (-b - sqrt(disc)) / (2.0 * a);
   if (root1 >= 0.0 && (!SkipZero || root1 != 0.0)) return {root1, true};
   const double root2 = (-b + sqrt(disc)) / (2.0 * a);
@@ -513,11 +524,8 @@ RAJA_HOST_DEVICE inline SenseResult Sense<SurfaceType::Sphere>(
   double y = yc - p.y;
   double z = zc - p.z;
 
-  const double value = x * x + y * y + z * z - radius * radius;
-
-  if (value < 0.0) return SenseResult::Negative;
-  if (value > 0.0) return SenseResult::Positive;
-  return SenseResult::On;
+  const double distance = sqrt(x * x + y * y + z * z) - radius;
+  return DistanceSense(distance);
 }
 
 template <SurfaceType Type, bool SkipZero>
@@ -536,9 +544,16 @@ RAJA_HOST_DEVICE inline IntersectionResult Intersection(const Particle& p,
   const double b = x * p.ux + y * p.uy + z * p.uz;
   const double c = x * x + y * y + z * z - radius * radius;
 
+  const bool on = Sense<SurfaceType::Sphere>(p, data) == SenseResult::On;
+  if (on && !SkipZero) return {0.0, true};
   double disc = b * b - c;
   if (disc < 0.0) return {INFINITY, false};
 
+  if (on) {
+    const double far = -b + (b <= 0.0 ? sqrt(disc) : -sqrt(disc));
+    return far > 0.0 ? IntersectionResult{far, true}
+                     : IntersectionResult{INFINITY, false};
+  }
   const double root1 = -b - sqrt(disc);
   if (root1 >= 0.0 && (!SkipZero || root1 != 0.0)) return {root1, true};
   const double root2 = -b + sqrt(disc);

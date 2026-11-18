@@ -611,4 +611,35 @@ TEST(CaerorGeometryState, ReflectOffSurface) {
   EXPECT_EQ(next.surface, left.id_);
 }
 
+TEST(CaerorGeometryState, RoundedVacuumBoundaryUsesUpdatedDirection) {
+  GeometryConstructor input;
+  const auto lower = input.CreateAxisAlignedPlane(Axis::Z, 0, BoundaryCondition::Vacuum);
+  const auto upper = input.CreateAxisAlignedPlane(Axis::Z, 2);
+  const auto cell = input.CreateCell(+lower && -upper, MaterialID{0});
+
+  CaerorGeometry geometry(input);
+  auto state = geometry.GetState<RAJA::resources::Host>();
+
+  for (double offset : {-0.25 * SURFACE_TOLERANCE, 0.25 * SURFACE_TOLERANCE}) {
+    for (double direction : {-1.0, 1.0}) {
+      Particle p{};
+      p.z = offset;
+      p.cell = cell.id_;
+      p.uz = direction;
+      const auto crossing = state.CrossSurface(p, lower.id_);
+      if (direction < 0) {
+        EXPECT_TRUE(crossing.leaked);
+        EXPECT_EQ(crossing.cell, CellID{MAXCaerorIndex});
+      } else {
+        EXPECT_FALSE(crossing.leaked);
+        EXPECT_EQ(crossing.cell, cell.id_);
+        EXPECT_DOUBLE_EQ(p.uz, 1);
+        const auto next = state.DistanceToCellBoundary(p);
+        EXPECT_EQ(next.surface, upper.id_);
+        EXPECT_NEAR(next.distance, 2, SURFACE_TOLERANCE);
+      }
+    }
+  }
+}
+
 }  // namespace
